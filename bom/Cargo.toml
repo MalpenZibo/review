@@ -1,0 +1,52 @@
+[package]
+name = "bom"
+version = "0.1.0"
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = ["console_log", "log-panics"]
+
+[dependencies]
+bom-macro = { path = "../bom-macro" }
+
+wasm-bindgen = "0.2.78"
+
+indextree = "4.3.1"
+scoped-tls-hkt = "0.1.2"
+
+strum = "0.20"
+strum_macros = "0.20"
+
+log = "0.4"
+console_log = { version = "0.2", features = ["color"], optional = true }
+log-panics = { version = "2.0.0", optional = true }
+
+# `wee_alloc` is a tiny allocator for wasm that is only ~1K in code size
+# compared to the default allocator's ~10K. However, it is slower than the default
+# allocator, so it's not enabled by default.
+wee_alloc = { version = "0.4.2", optional = true }
+
+# The `web-sys` crate allows you to interact with the various browser APIs,
+# like the DOM.
+[dependencies.web-sys]
+version = "0.3.22"
+features = [
+  "console",
+  "Document",
+  "Element",
+  "Text",
+  "HtmlElement",
+  "Node",
+  "NodeList",
+  "Window",
+  "MouseEvent",
+  "HtmlButtonElement",
+  "EventListener",
+  "IdleDeadline"
+]
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3.13"
