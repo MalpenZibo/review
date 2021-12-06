@@ -1,18 +1,19 @@
 use crate::app::APP;
+use crate::fiber::FiberId;
 use scoped_tls_hkt::scoped_thread_local;
 use std::any::Any;
 use std::cell::RefCell;
 use std::fmt::Debug;
 use std::rc::Rc;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub(crate) struct HookContext {
     pub hooks: Vec<Rc<RefCell<dyn Any>>>,
     pub counter: usize,
 }
 
 scoped_thread_local! {
-    pub(crate) static mut HOOK_CONTEXT: HookContext
+    pub(crate) static mut HOOK_CONTEXT: for<'a> (FiberId, &'a mut HookContext)
 }
 
 pub struct State<T, S: Fn(T) -> ()> {
@@ -27,22 +28,24 @@ impl<T, S: Fn(T) -> ()> State<T, S> {
 }
 
 pub fn use_state<T: Any + Debug>(initial_value: T) -> Rc<State<T, impl Fn(T)>> {
-    let hook: Rc<RefCell<dyn Any>> = HOOK_CONTEXT.with(|mut hook_context| {
-        let hook_position = hook_context.counter;
-        hook_context.counter += 1;
+    let (fiber_target_id, hook): (FiberId, Rc<RefCell<dyn Any>>) =
+        HOOK_CONTEXT.with(|mut hook_context| {
+            let hook_position = hook_context.1.counter;
+            hook_context.1.counter += 1;
 
-        if hook_position >= hook_context.hooks.len() {
-            let initial_value = Rc::new(RefCell::new(Rc::new(initial_value)));
-            hook_context.hooks.push(initial_value.clone());
-        }
-        let cur_value = hook_context
-            .hooks
-            .get(hook_position)
-            .expect("Retrieving hook error. Remember hook cannot be called conditionally")
-            .clone();
+            if hook_position >= hook_context.1.hooks.len() {
+                let initial_value = Rc::new(RefCell::new(Rc::new(initial_value)));
+                hook_context.1.hooks.push(initial_value.clone());
+            }
+            let cur_value = hook_context
+                .1
+                .hooks
+                .get(hook_position)
+                .expect("Retrieving hook error. Remember hook cannot be called conditionally")
+                .clone();
 
-        cur_value
-    });
+            (hook_context.0, cur_value)
+        });
 
     let update_hook = hook.clone();
 
@@ -58,9 +61,8 @@ pub fn use_state<T: Any + Debug>(initial_value: T) -> Rc<State<T, impl Fn(T)>> {
         APP.with(|app| {
             if let Ok(mut app) = app.try_borrow_mut() {
                 if let Some(app) = &mut *app {
-                    if app.working_context.working_complete() {
-                        app.start_new_work();
-                    }
+                    app.wip_root = Some(fiber_target_id);
+                    app.next_unit_of_work = Some(fiber_target_id);
                 }
             }
         });
@@ -88,7 +90,7 @@ mod tests {
             counter: 0,
         };
 
-        HOOK_CONTEXT.set(&mut context, || {
+        HOOK_CONTEXT.set((0, &mut context), || {
             let state = use_state(7);
 
             assert_eq!(state.value, Rc::new(7));
@@ -98,7 +100,7 @@ mod tests {
 
         context.counter = 0;
 
-        HOOK_CONTEXT.set(&mut context, || {
+        HOOK_CONTEXT.set((0, &mut context), || {
             let state = use_state(7);
 
             assert_eq!(state.value, Rc::new(9));
@@ -118,7 +120,7 @@ mod tests {
             counter: 0,
         };
 
-        HOOK_CONTEXT.set(&mut context, || {
+        HOOK_CONTEXT.set((0, &mut context), || {
             let int_state = use_state(7);
             let string_state = use_state("test".to_owned());
             let struct_state = use_state(Test { i: 9, f: 3.4 });
@@ -134,7 +136,7 @@ mod tests {
 
         context.counter = 0;
 
-        HOOK_CONTEXT.set(&mut context, || {
+        HOOK_CONTEXT.set((0, &mut context), || {
             let int_state = use_state(7);
             let string_state = use_state("test".to_owned());
             let struct_state = use_state(Test { i: 9, f: 3.4 });

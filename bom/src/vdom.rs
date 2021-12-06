@@ -115,7 +115,6 @@ pub fn create_text(text: &str) -> VNode {
     VNode::Text(text.to_owned())
 }
 
-
 #[macro_export]
 macro_rules! callback {
     (|| $body:expr) => {

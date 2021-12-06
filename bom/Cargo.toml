@@ -14,7 +14,6 @@ bom-macro = { path = "../bom-macro" }
 
 wasm-bindgen = "0.2.78"
 
-indextree = "4.3.1"
 scoped-tls-hkt = "0.1.2"
 
 strum = "0.20"

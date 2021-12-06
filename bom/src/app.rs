@@ -1,14 +1,13 @@
-use crate::dom::commit_patches;
-use crate::dom::work_on_vdom;
-use crate::dom::DomNode;
-use crate::dom::WorkingContext;
+use crate::fiber::Element;
+use crate::fiber::FiberId;
+use crate::fiber::FiberTree;
+use crate::fiber::Node;
+use crate::reconciliation::commit;
+use crate::reconciliation::perform_unit_of_work;
 use crate::request_idle_callback;
 use crate::tag::Tag;
 use crate::Events;
 use crate::VNode;
-use crate::HOOK_CONTEXT;
-use indextree::Arena;
-use indextree::NodeId;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -16,71 +15,11 @@ use wasm_bindgen::closure::Closure;
 
 #[derive(Debug)]
 pub(crate) struct App {
-    pub node_tree: Arena<DomNode>,
-    pub root: NodeId,
-    pub working_context: WorkingContext,
+    pub fiber_tree: FiberTree,
+    pub root: FiberId,
+    pub wip_root: Option<FiberId>,
+    pub next_unit_of_work: Option<FiberId>,
     pub document: Option<web_sys::Document>,
-}
-
-impl App {
-    pub fn start_new_work(&mut self) {
-        self.working_context.vnode_buffer.clear();
-        self.working_context.patches.clear();
-
-        let node_id = self
-            .node_tree
-            .get(self.root)
-            .unwrap()
-            .first_child()
-            .unwrap();
-
-        self.working_context.last_deep = 0;
-        self.working_context.current_node_id = node_id;
-        self.working_context.last_parent = self.root;
-
-        if let DomNode::Component { function, hooks } = self
-            .node_tree
-            .get_mut(
-                self.node_tree
-                    .get(self.root)
-                    .unwrap()
-                    .first_child()
-                    .unwrap(),
-            )
-            .unwrap()
-            .get_mut()
-        {
-            hooks.counter = 0;
-            let child = HOOK_CONTEXT.set(hooks, || {
-                let child = function.run();
-                child
-            });
-            match child {
-                VNode::Element {
-                    tag,
-                    attributes,
-                    events,
-                    children,
-                } => {
-                    self.working_context.vnode_buffer = vec![(
-                        1,
-                        VNode::Element {
-                            tag: tag,
-                            attributes: attributes,
-                            events: events,
-                            children: children,
-                        },
-                    )];
-                }
-                VNode::Text(text) => {
-                    self.working_context.vnode_buffer = vec![(1, VNode::Text(text))];
-                }
-                VNode::Component(component) => {
-                    self.working_context.vnode_buffer = vec![(1, VNode::Component(component))];
-                }
-            }
-        }
-    }
 }
 
 thread_local! {
@@ -89,32 +28,19 @@ thread_local! {
 
 pub fn render(element: VNode, container: web_sys::Element) {
     APP.with(|app| {
-        //let mut app = app.borrow_mut();
-        let mut node_tree = Arena::default();
-        let root_node = node_tree.new_node(DomNode::Element {
+        let mut fiber_tree = FiberTree::default();
+        let root_id = fiber_tree.new_node(Node::Element(Element {
             dom: Some(container),
             tag: Tag::Empty,
             attributes: HashMap::with_capacity(0),
             events: Events(HashMap::with_capacity(0)),
-        });
+            unprocessed_children: vec![element],
+        }));
         app.replace(Some(App {
-            node_tree: node_tree,
-            root: root_node,
-            working_context: WorkingContext {
-                vnode_buffer: vec![(
-                    0,
-                    VNode::Element {
-                        tag: Tag::Empty,
-                        attributes: HashMap::with_capacity(0),
-                        events: Events(HashMap::with_capacity(0)),
-                        children: vec![element],
-                    },
-                )],
-                patches: Vec::default(),
-                last_deep: 0,
-                current_node_id: root_node,
-                last_parent: root_node,
-            },
+            fiber_tree,
+            root: root_id,
+            next_unit_of_work: Some(root_id),
+            wip_root: Some(root_id),
             document: Some(web_sys::window().unwrap().document().unwrap()),
         }));
 
@@ -126,14 +52,10 @@ pub fn render(element: VNode, container: web_sys::Element) {
                 APP.with(|app| {
                     if let Ok(mut app) = app.try_borrow_mut() {
                         if let Some(app) = &mut *app {
-                            if !app.working_context.working_complete() {
-                                work_on_vdom(app, || deadline.time_remaining() > 1.0);
-                                if deadline.time_remaining() > 1.0
-                                    && app.working_context.working_complete()
-                                {
-                                    commit_patches(app);
-                                }
-                            }
+                            let check_deadline = || deadline.time_remaining() > 1.0;
+                            work_loop(app, check_deadline);
+
+                            commit_work(app, check_deadline);
                         }
                     }
                     request_idle_callback(f.borrow().as_ref().unwrap());
@@ -143,4 +65,28 @@ pub fn render(element: VNode, container: web_sys::Element) {
 
         request_idle_callback(g.borrow().as_ref().unwrap());
     });
+}
+
+pub(crate) fn work_loop<F: Fn() -> bool>(app: &mut App, continue_working: F) {
+    while app.next_unit_of_work.is_some() && continue_working() {
+        if let Some(current_id) = app.next_unit_of_work {
+            app.next_unit_of_work =
+                perform_unit_of_work(current_id, &mut app.fiber_tree, app.document.as_ref());
+        }
+    }
+}
+
+pub(crate) fn commit_work<F: Fn() -> bool>(app: &mut App, continue_working: F) {
+    if let Some(wip_root) = app.wip_root {
+        if continue_working() {
+            if let Some(child_id) = app
+                .fiber_tree
+                .get(wip_root)
+                .and_then(|wip_node| wip_node.child)
+            {
+                commit(Some(child_id), &mut app.fiber_tree);
+                app.wip_root = None;
+            }
+        }
+    }
 }

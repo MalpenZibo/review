@@ -1,8 +1,9 @@
 mod app;
 mod component;
-pub mod dom;
 mod events;
+mod fiber;
 mod hooks;
+mod reconciliation;
 mod tag;
 mod utils;
 mod vdom;
