@@ -1,13 +1,8 @@
-use crate::fiber::Element;
-use crate::fiber::FiberId;
-use crate::fiber::FiberTree;
-use crate::fiber::Node;
-use crate::reconciliation::commit;
-use crate::reconciliation::perform_unit_of_work;
+use crate::fiber::{FiberId, FiberTree};
+use crate::node::{Element, Node};
+use crate::reconciliation::{commit, perform_unit_of_work};
 use crate::request_idle_callback;
-use crate::tag::Tag;
-use crate::Events;
-use crate::VNode;
+use crate::{Events, Tag, VNode};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;

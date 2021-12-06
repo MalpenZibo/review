@@ -1,18 +1,7 @@
-use crate::fiber::Component;
-use crate::fiber::EffectTag;
-use crate::fiber::Element;
-use crate::fiber::FiberId;
-use crate::fiber::FiberNode;
-use crate::fiber::FiberTree;
-use crate::fiber::Node;
-use crate::fiber::Text;
-use crate::fiber::UpdateData;
-use crate::Events;
-use crate::HookContext;
+use crate::fiber::{EffectTag, FiberId, FiberNode, FiberTree, UpdateData};
+use crate::node::{Component, Element, Node, Text};
 use crate::VNode;
 use crate::HOOK_CONTEXT;
-use std::collections::HashMap;
-use wasm_bindgen::JsCast;
 
 pub(crate) fn perform_unit_of_work(
     id: FiberId,
@@ -64,123 +53,6 @@ fn update_component_node(id: FiberId, fiber_tree: &mut FiberTree) {
     }
 }
 
-fn create_dom(fiber_node: &mut FiberNode, document: Option<&web_sys::Document>) {
-    if let Some(document) = document {
-        match &mut fiber_node.node {
-            Node::Element(Element {
-                dom,
-                tag,
-                attributes,
-                events,
-                ..
-            }) => {
-                dom.replace(document.create_element(tag.as_ref()).unwrap());
-
-                for a in attributes {
-                    if let Some(dom) = dom {
-                        dom.set_attribute(&a.0, &a.1).expect("set attribute error");
-                    }
-                }
-
-                for (event_type, event) in &events.0 {
-                    if let Some(dom) = dom {
-                        dom.add_event_listener_with_callback(
-                            event_type.as_ref(),
-                            event.as_ref().as_ref().unchecked_ref(),
-                        )
-                        .expect("add event error");
-                    }
-                }
-            }
-            Node::Text(Text { dom, text }) => {
-                dom.replace(document.create_text_node(&text));
-            }
-            _ => {}
-        }
-    }
-}
-
-fn update_element_dom(element: &mut Element, attributes: HashMap<String, String>, events: Events) {
-    let attributes_to_set =
-        attributes
-            .iter()
-            .filter_map(|(k, v)| match element.attributes.get(k) {
-                Some(old_v) if old_v != v => Some((k, v)),
-                None => Some((k, v)),
-                _ => None,
-            });
-    let attributes_to_remove = element.attributes.keys().filter_map(|k| {
-        if !attributes.contains_key(k) {
-            Some(k)
-        } else {
-            None
-        }
-    });
-
-    for a in attributes_to_set {
-        if let Some(dom) = &element.dom {
-            dom.set_attribute(&a.0, &a.1).expect("set attribute error");
-        }
-    }
-    for a in attributes_to_remove {
-        if let Some(dom) = &element.dom {
-            dom.remove_attribute(a).expect("set attribute error");
-        }
-    }
-
-    element.attributes = attributes;
-
-    let events_to_set = events
-        .0
-        .iter()
-        .filter_map(|(k, v)| match element.events.0.get(k) {
-            Some(old_v) => Some((Some(old_v), k, v)),
-            None => Some((None, k, v)),
-        });
-    let events_to_remove = element.events.0.iter().filter_map(|(k, v)| {
-        if !events.0.contains_key(k) {
-            Some((k, v))
-        } else {
-            None
-        }
-    });
-
-    for (old_event, event_type, new_event) in events_to_set {
-        if let Some(dom) = &element.dom {
-            if let Some(old_event) = old_event {
-                dom.remove_event_listener_with_callback(
-                    event_type.as_ref(),
-                    old_event.as_ref().as_ref().unchecked_ref(),
-                )
-                .expect("remove event error");
-            }
-            dom.add_event_listener_with_callback(
-                event_type.as_ref(),
-                new_event.as_ref().as_ref().unchecked_ref(),
-            )
-            .expect("add event error");
-        }
-    }
-    for (event_type, old_event) in events_to_remove {
-        if let Some(dom) = &element.dom {
-            dom.remove_event_listener_with_callback(
-                event_type.as_ref(),
-                old_event.as_ref().as_ref().unchecked_ref(),
-            )
-            .expect("remove event error");
-        }
-    }
-
-    element.events = events;
-}
-
-fn update_text_dom(text: &mut Text, new_text: String) {
-    if let Some(dom) = &text.dom {
-        dom.set_data(&new_text);
-    }
-    text.text = new_text;
-}
-
 fn update_node(id: FiberId, fiber_tree: &mut FiberTree, document: Option<&web_sys::Document>) {
     let element = fiber_tree.get_mut(id).unwrap();
     if match &element.node {
@@ -188,7 +60,7 @@ fn update_node(id: FiberId, fiber_tree: &mut FiberTree, document: Option<&web_sy
         Node::Text(Text { dom, .. }) => dom.is_none(),
         _ => false,
     } {
-        create_dom(element, document);
+        element.node.create_dom(document);
     }
     if let Node::Element(Element {
         unprocessed_children,
@@ -243,47 +115,8 @@ fn reconcile_children(id: FiberId, elements: Vec<VNode>, fiber_tree: &mut FiberT
 
                     None
                 }
-                Some(old_fiber) if old_fiber != &element => Some(match element {
-                    VNode::Element {
-                        tag,
-                        attributes,
-                        events,
-                        children,
-                    } => Node::Element(Element {
-                        tag,
-                        attributes,
-                        events,
-                        dom: None,
-                        unprocessed_children: children,
-                    }),
-                    VNode::Text(text) => Node::Text(Text { text, dom: None }),
-                    VNode::Component(component) => Node::Component(Component {
-                        hooks: HookContext {
-                            hooks: Vec::default(),
-                            counter: 0,
-                        },
-                        function: component,
-                    }),
-                }),
-                None => Some(match element {
-                    VNode::Element {
-                        tag,
-                        attributes,
-                        events,
-                        children,
-                    } => Node::Element(Element {
-                        tag,
-                        attributes,
-                        events,
-                        dom: None,
-                        unprocessed_children: children,
-                    }),
-                    VNode::Text(text) => Node::Text(Text { text, dom: None }),
-                    VNode::Component(component) => Node::Component(Component {
-                        hooks: HookContext::default(),
-                        function: component,
-                    }),
-                }),
+                Some(old_fiber) if old_fiber != &element => Some(element.to_node()),
+                None => Some(element.to_node()),
                 _ => None,
             }
         };
@@ -398,7 +231,7 @@ pub(crate) fn commit(id: Option<FiberId>, fiber_tree: &mut FiberTree) {
                             .map(|fiber_node| &mut fiber_node.node)
                         {
                             Some(Node::Element(element)) => {
-                                update_element_dom(element, attributes, events)
+                                element.update_element_dom(attributes, events)
                             }
                             _ => {}
                         }
@@ -407,7 +240,7 @@ pub(crate) fn commit(id: Option<FiberId>, fiber_tree: &mut FiberTree) {
                         .get_mut(id)
                         .map(|fiber_node| &mut fiber_node.node)
                     {
-                        Some(Node::Text(text)) => update_text_dom(text, new_text),
+                        Some(Node::Text(text)) => text.update_text_dom(new_text),
                         _ => {}
                     },
                     EffectTag::Deletion => {
@@ -479,8 +312,10 @@ mod tests {
     use crate::component::ComponentProvider;
     use crate::tag::Tag;
     use crate::work_loop;
+    use crate::Events;
     use crate::VNode;
     use crate::{create_element, create_text};
+    use std::collections::HashMap;
 
     fn create_app(dom: VNode) -> App {
         let mut fiber_tree = FiberTree::default();

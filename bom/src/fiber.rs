@@ -1,8 +1,5 @@
-use crate::AnyComponent;
-use crate::Events;
-use crate::HookContext;
-use crate::Tag;
-use crate::VNode;
+use crate::node::{Element, Node};
+use crate::{Events, VNode};
 use std::collections::HashMap;
 
 pub(crate) type FiberId = usize;
@@ -15,47 +12,6 @@ pub(crate) struct FiberNode {
     pub sibling: Option<FiberId>,
     pub effect_tag: Option<EffectTag>,
     pub state: State,
-}
-
-#[derive(Debug)]
-pub(crate) struct Element {
-    pub dom: Option<web_sys::Element>,
-    pub tag: Tag,
-    pub attributes: HashMap<String, String>,
-    pub events: Events,
-    pub unprocessed_children: Vec<VNode>,
-}
-
-#[derive(Debug)]
-pub(crate) struct Text {
-    pub dom: Option<web_sys::Text>,
-    pub text: String,
-}
-
-#[derive(Debug)]
-pub(crate) struct Component {
-    pub hooks: HookContext,
-    pub function: Box<dyn AnyComponent>,
-}
-
-#[derive(Debug)]
-pub(crate) enum Node {
-    Element(Element),
-    Text(Text),
-    Component(Component),
-}
-
-impl std::cmp::PartialEq<VNode> for FiberNode {
-    fn eq(&self, other: &VNode) -> bool {
-        match (&self.node, other) {
-            (
-                Node::Element(Element { tag: node_tag, .. }),
-                VNode::Element { tag: vnode_tag, .. },
-            ) => node_tag == vnode_tag,
-            (Node::Text(_), VNode::Text(_)) => true,
-            _ => false,
-        }
-    }
 }
 
 #[derive(Debug)]
@@ -72,6 +28,19 @@ pub(crate) enum EffectTag {
     Placement,
     Deletion,
     Update(UpdateData),
+}
+
+impl std::cmp::PartialEq<VNode> for FiberNode {
+    fn eq(&self, other: &VNode) -> bool {
+        match (&self.node, other) {
+            (
+                Node::Element(Element { tag: node_tag, .. }),
+                VNode::Element { tag: vnode_tag, .. },
+            ) => node_tag == vnode_tag,
+            (Node::Text(_), VNode::Text(_)) => true,
+            _ => false,
+        }
+    }
 }
 
 #[derive(PartialEq, Debug)]

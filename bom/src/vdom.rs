@@ -1,9 +1,7 @@
-use crate::component::AnyComponent;
-use crate::events::EventType;
-use crate::tag::Tag;
+use crate::node::{Component, Element, Node, Text};
+use crate::{AnyComponent, EventType, HookContext, Tag};
 use std::collections::HashMap;
 use std::rc::Rc;
-use wasm_bindgen::closure::Closure;
 use wasm_bindgen::JsValue;
 
 #[derive(Debug)]
@@ -16,6 +14,33 @@ pub enum VNode {
     },
     Text(String),
     Component(Box<dyn AnyComponent>),
+}
+
+impl VNode {
+    pub(crate) fn to_node(self) -> Node {
+        match self {
+            VNode::Element {
+                tag,
+                attributes,
+                events,
+                children,
+            } => Node::Element(Element {
+                tag,
+                attributes,
+                events,
+                dom: None,
+                unprocessed_children: children,
+            }),
+            VNode::Text(text) => Node::Text(Text { text, dom: None }),
+            VNode::Component(component) => Node::Component(Component {
+                hooks: HookContext {
+                    hooks: Vec::default(),
+                    counter: 0,
+                },
+                function: component,
+            }),
+        }
+    }
 }
 
 #[derive(Debug)]

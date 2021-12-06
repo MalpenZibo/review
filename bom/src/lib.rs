@@ -3,6 +3,7 @@ mod component;
 mod events;
 mod fiber;
 mod hooks;
+mod node;
 mod reconciliation;
 mod tag;
 mod utils;
