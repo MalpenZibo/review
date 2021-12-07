@@ -1,3 +1,4 @@
+use bom::callback;
 use bom::component;
 use bom::create_component;
 use bom::create_element;
@@ -7,7 +8,6 @@ use bom::ComponentProvider;
 use bom::EventType;
 use bom::Tag;
 use bom::VNode;
-use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 
 // When the `wee_alloc` feature is enabled, this uses `wee_alloc` as the global
@@ -24,9 +24,9 @@ fn app() -> VNode {
 
     let stuff = {
         let counter = counter.clone();
-        Closure::wrap(Box::new(move || {
+        callback!(move || {
             counter.set(*(counter.value) + 1);
-        }) as Box<dyn FnMut()>)
+        })
     };
 
     create_element(Tag::Div)
@@ -34,7 +34,7 @@ fn app() -> VNode {
         .with_child(
             create_element(Tag::Button)
                 .with_child(create_text("Inrement Counter"))
-                .with_event(EventType::OnClick, Rc::new(stuff))
+                .with_event(EventType::OnClick, stuff)
                 .build(),
         )
         .build()
