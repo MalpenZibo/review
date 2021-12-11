@@ -1,4 +1,5 @@
 use crate::node::{Element, Node};
+use crate::vdom::VElement;
 use crate::{Events, VNode};
 use std::collections::HashMap;
 
@@ -35,7 +36,7 @@ impl std::cmp::PartialEq<VNode> for FiberNode {
         match (&self.node, other) {
             (
                 Node::Element(Element { tag: node_tag, .. }),
-                VNode::Element { tag: vnode_tag, .. },
+                VNode::Element(VElement { tag: vnode_tag, .. }),
             ) => node_tag == vnode_tag,
             (Node::Text(_), VNode::Text(_)) => true,
             _ => false,

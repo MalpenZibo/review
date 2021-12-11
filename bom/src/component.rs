@@ -2,18 +2,13 @@ use crate::VNode;
 use std::any::Any;
 use std::any::TypeId;
 use std::fmt::Debug;
-use std::marker::PhantomData;
 
 pub trait ComponentProvider: Debug {
-    type Props: Any + PartialEq + Debug;
+    type Props: Any;
 
     fn run(props: &Self::Props) -> VNode;
-}
 
-#[derive(Debug)]
-pub struct Component<T: ComponentProvider> {
-    _never: PhantomData<T>,
-    props: T::Props,
+    fn get_props<'a>(&'a self) -> &'a Self::Props;
 }
 
 pub trait AnyComponent: Debug {
@@ -22,9 +17,9 @@ pub trait AnyComponent: Debug {
     fn get_type(&self) -> TypeId;
 }
 
-impl<T: Any + ComponentProvider> AnyComponent for Component<T> {
+impl<T: Any + ComponentProvider> AnyComponent for T {
     fn run(&self) -> VNode {
-        T::run(&self.props)
+        T::run(self.get_props())
     }
 
     fn get_type(&self) -> TypeId {
@@ -38,9 +33,8 @@ impl std::cmp::PartialEq<Box<dyn AnyComponent>> for Box<dyn AnyComponent> {
     }
 }
 
-pub fn create_component<T: ComponentProvider + 'static>(props: T::Props) -> VNode {
-    VNode::Component(Box::new(Component::<T> {
-        _never: std::marker::PhantomData::default(),
-        props,
-    }))
+impl<T: Any + ComponentProvider> From<T> for VNode {
+    fn from(v: T) -> VNode {
+        VNode::Component(Box::new(v))
+    }
 }
