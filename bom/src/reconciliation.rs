@@ -43,10 +43,23 @@ pub(crate) fn perform_unit_of_work(
 }
 
 fn update_component_node(id: FiberId, fiber_tree: &mut FiberTree) {
-    if let Some(Node::Component(Component { hooks, function })) = fiber_tree
+    if let Some((
+        effect_tag,
+        Node::Component(Component {
+            hooks,
+            function: old_function,
+        }),
+    )) = fiber_tree
         .get_mut(id)
-        .map(|fiber_node| &mut fiber_node.node)
+        .map(|fiber_node| (&fiber_node.effect_tag, &mut fiber_node.node))
     {
+        let function =
+            if let Some(EffectTag::Update(UpdateData::Component(new_component))) = effect_tag {
+                new_component
+            } else {
+                old_function
+            };
+
         hooks.counter = 0;
         let hooks = (id, hooks);
         let elements = HOOK_CONTEXT.set(hooks, || vec![function.run()]);
@@ -110,7 +123,10 @@ fn reconcile_children(id: FiberId, elements: Vec<VNode>, fiber_tree: &mut FiberT
                         VNode::Text(text) => {
                             old_fiber.effect_tag = Some(EffectTag::Update(UpdateData::Text(text)));
                         }
-                        _ => {}
+                        VNode::Component(component) => {
+                            old_fiber.effect_tag =
+                                Some(EffectTag::Update(UpdateData::Component(component)))
+                        }
                     };
                     old_fiber.parent = Some(wip_fiber_id);
 
@@ -244,6 +260,15 @@ pub(crate) fn commit(id: Option<FiberId>, fiber_tree: &mut FiberTree) {
                         Some(Node::Text(text)) => text.update_text_dom(new_text),
                         _ => {}
                     },
+                    EffectTag::Update(UpdateData::Component(new_component)) => match fiber_tree
+                        .get_mut(id)
+                        .map(|fiber_node| &mut fiber_node.node)
+                    {
+                        Some(Node::Component(Component { function, .. })) => {
+                            *function = new_component;
+                        }
+                        _ => {}
+                    },
                     EffectTag::Deletion => {
                         match (fiber_tree.get(id), parent_dom) {
                             (
@@ -303,412 +328,361 @@ pub(crate) fn commit(id: Option<FiberId>, fiber_tree: &mut FiberTree) {
     }
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-//     use crate::app::App;
-//     use crate::commit_work;
-//     use crate::component;
-//     use crate::component::create_component;
-//     use crate::component::ComponentProvider;
-//     use crate::tag::Tag;
-//     use crate::work_loop;
-//     use crate::Events;
-//     use crate::VNode;
-//     //use crate::{create_element, create_text};
-//     use std::collections::HashMap;
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::app::App;
+    use crate::commit_work;
+    use crate::tag::Tag;
+    use crate::work_loop;
+    use crate::Events;
+    use crate::Tag::Button;
+    use crate::Tag::Div;
+    use crate::Tag::A;
+    use crate::Tag::B;
+    use crate::VNode;
+    use std::collections::HashMap;
 
-//     fn create_app(dom: VNode) -> App {
-//         let mut fiber_tree = FiberTree::default();
-//         let root_id = fiber_tree.new_node(Node::Element(Element {
-//             dom: None,
-//             tag: Tag::Empty,
-//             attributes: HashMap::with_capacity(0),
-//             events: Events(HashMap::with_capacity(0)),
-//             unprocessed_children: vec![dom],
-//         }));
-//         App {
-//             fiber_tree,
-//             root: root_id,
-//             next_unit_of_work: Some(root_id),
-//             wip_root: Some(root_id),
-//             document: None,
-//         }
-//     }
+    use crate as bom;
+    use bom::*;
 
-//     fn work_on_dom(app: &mut App) {
-//         work_loop(app, || true);
-//     }
+    fn create_app(dom: VNode) -> App {
+        let mut fiber_tree = FiberTree::default();
+        let root_id = fiber_tree.new_node(Node::Element(Element {
+            dom: None,
+            tag: Tag::Empty,
+            attributes: HashMap::with_capacity(0),
+            events: Events(HashMap::with_capacity(0)),
+            unprocessed_children: vec![dom],
+        }));
+        App {
+            fiber_tree,
+            root: root_id,
+            next_unit_of_work: Some(root_id),
+            wip_root: Some(root_id),
+            document: None,
+        }
+    }
 
-//     fn commit(app: &mut App) {
-//         commit_work(app, || true);
-//     }
+    fn work_on_dom(app: &mut App) {
+        work_loop(app, || true);
+    }
 
-//     fn compare_vdom_with_dom(vdom: VNode, app: &App) {
-//         println!("vdom: {:?}", vdom);
-//         let mut vnode_buffer = vec![VNode::Element {
-//             tag: Tag::Empty,
-//             attributes: HashMap::with_capacity(0),
-//             events: Events(HashMap::with_capacity(0)),
-//             children: vec![vdom],
-//         }];
-//         let mut node_buffer = vec![app.root];
-//         while !(node_buffer.is_empty()) {
-//             if let Some(node_id) = node_buffer.pop() {
-//                 let mut next = app.fiber_tree.get(node_id).and_then(|node| node.child);
-//                 while let Some(current) = next {
-//                     node_buffer.push(current);
-//                     next = app.fiber_tree.get(current).and_then(|node| node.sibling);
-//                 }
-//                 if let Some(vnode) = vnode_buffer.pop() {
-//                     match (vnode, app.fiber_tree.get(node_id).map(|n| &n.node)) {
-//                         (
-//                             VNode::Element {
-//                                 tag: vtag,
-//                                 attributes: vattributes,
-//                                 events: vevents,
-//                                 children,
-//                             },
-//                             Some(Node::Element(Element {
-//                                 tag,
-//                                 attributes,
-//                                 events,
-//                                 ..
-//                             })),
-//                         ) => {
-//                             for c in children.into_iter() {
-//                                 vnode_buffer.push(c);
-//                             }
-//                             println!("vnode: {:?}, {:?}, {:?}", vtag, vattributes, vevents);
-//                             println!("node: {:?}, {:?}, {:?}", tag, attributes, events);
-//                             assert_eq!(vtag, *tag);
-//                             assert_eq!(vattributes, *attributes);
-//                             assert_eq!(vevents, *events);
-//                         }
-//                         (VNode::Text(vtext), Some(Node::Text(Text { text, .. }))) => {
-//                             println!("vnode: {:?}", vtext);
-//                             println!("node: {:?}", text);
-//                             assert_eq!(vtext, *text);
-//                         }
-//                         (VNode::Component(component), Some(Node::Component(Component { .. }))) => {
-//                             vnode_buffer.push(component.run());
-//                         }
-//                         _ => {
-//                             panic!("Different node");
-//                         }
-//                     }
-//                 } else {
-//                     panic!("No vnode found");
-//                 }
-//             }
-//         }
-//     }
+    fn commit(app: &mut App) {
+        commit_work(app, || true);
+    }
 
-//     fn print_tree(app: &App) {
-//         println!("print tree: ");
-//         let mut next = Some(app.root);
-//         let mut deep = 0;
-//         while let Some(current) = next {
-//             for _ in 0..deep {
-//                 print!("-");
-//             }
-//             println!(
-//                 "nodeId: {:?}, value: {:?}",
-//                 current,
-//                 app.fiber_tree.get(current).map(|node| &node.node)
-//             );
+    fn compare_vdom_with_dom(vdom: VNode, app: &App) {
+        println!("vdom: {:?}", vdom);
+        let mut vnode_buffer = vec![VNode::Element(VElement {
+            tag: Tag::Empty,
+            attributes: HashMap::with_capacity(0),
+            events: Events(HashMap::with_capacity(0)),
+            children: vec![vdom],
+        })];
+        let mut node_buffer = vec![app.root];
+        while !(node_buffer.is_empty()) {
+            if let Some(node_id) = node_buffer.pop() {
+                let mut next = app.fiber_tree.get(node_id).and_then(|node| node.child);
+                while let Some(current) = next {
+                    node_buffer.push(current);
+                    next = app.fiber_tree.get(current).and_then(|node| node.sibling);
+                }
+                if let Some(vnode) = vnode_buffer.pop() {
+                    match (vnode, app.fiber_tree.get(node_id).map(|n| &n.node)) {
+                        (
+                            VNode::Element(VElement {
+                                tag: vtag,
+                                attributes: vattributes,
+                                events: vevents,
+                                children,
+                            }),
+                            Some(Node::Element(Element {
+                                tag,
+                                attributes,
+                                events,
+                                ..
+                            })),
+                        ) => {
+                            for c in children.into_iter() {
+                                vnode_buffer.push(c);
+                            }
+                            println!("vnode: {:?}, {:?}, {:?}", vtag, vattributes, vevents);
+                            println!("node: {:?}, {:?}, {:?}", tag, attributes, events);
+                            assert_eq!(vtag, *tag);
+                            assert_eq!(vattributes, *attributes);
+                            assert_eq!(vevents, *events);
+                        }
+                        (VNode::Text(vtext), Some(Node::Text(Text { text, .. }))) => {
+                            println!("vnode: {:?}", vtext);
+                            println!("node: {:?}", text);
+                            assert_eq!(vtext, *text);
+                        }
+                        (VNode::Component(component), Some(Node::Component(Component { .. }))) => {
+                            vnode_buffer.push(component.run());
+                        }
+                        _ => {
+                            panic!("Different node");
+                        }
+                    }
+                } else {
+                    panic!("No vnode found");
+                }
+            }
+        }
+    }
 
-//             next = app.fiber_tree.get(current).and_then(|node| node.child);
-//             if let Some(child) = app.fiber_tree.get(current).and_then(|node| node.child) {
-//                 deep += 1;
-//                 next = Some(child);
-//             } else if let Some(sibling) = app.fiber_tree.get(current).and_then(|node| node.sibling)
-//             {
-//                 next = Some(sibling)
-//             } else {
-//                 deep -= 1;
-//                 let mut go_up = app.fiber_tree.get(current).and_then(|node| node.parent);
-//                 while let Some(current) = go_up {
-//                     if let Some(sibling) = app.fiber_tree.get(current).and_then(|node| node.sibling)
-//                     {
-//                         next = Some(sibling);
-//                         go_up = None;
-//                     } else {
-//                         deep -= 1;
-//                         go_up = app.fiber_tree.get(current).and_then(|node| node.parent);
-//                     }
-//                 }
-//             }
-//         }
-//         println!();
-//     }
+    fn print_tree(app: &App) {
+        println!("print tree: ");
+        let mut next = Some(app.root);
+        let mut deep = 0;
+        while let Some(current) = next {
+            for _ in 0..deep {
+                print!("-");
+            }
+            println!(
+                "nodeId: {:?}, value: {:?}",
+                current,
+                app.fiber_tree.get(current).map(|node| &node.node)
+            );
 
-//     fn manually_generate_working_context(app: &mut App, vdom: VNode) {
-//         app.wip_root = Some(app.root);
-//         app.next_unit_of_work = Some(app.root);
-//         app.fiber_tree
-//             .get_mut(app.root)
-//             .map(|node| match &mut node.node {
-//                 Node::Element(Element {
-//                     unprocessed_children,
-//                     ..
-//                 }) => {
-//                     *unprocessed_children = vec![vdom];
-//                 }
-//                 _ => {}
-//             });
-//     }
+            next = app.fiber_tree.get(current).and_then(|node| node.child);
+            if let Some(child) = app.fiber_tree.get(current).and_then(|node| node.child) {
+                deep += 1;
+                next = Some(child);
+            } else if let Some(sibling) = app.fiber_tree.get(current).and_then(|node| node.sibling)
+            {
+                next = Some(sibling)
+            } else {
+                deep -= 1;
+                let mut go_up = app.fiber_tree.get(current).and_then(|node| node.parent);
+                while let Some(current) = go_up {
+                    if let Some(sibling) = app.fiber_tree.get(current).and_then(|node| node.sibling)
+                    {
+                        next = Some(sibling);
+                        go_up = None;
+                    } else {
+                        deep -= 1;
+                        go_up = app.fiber_tree.get(current).and_then(|node| node.parent);
+                    }
+                }
+            }
+        }
+        println!();
+    }
 
-//     #[test]
-//     fn simple_vdom_creation() {
-//         let vdom = || {
-//             create_element(Tag::Div)
-//                 .with_child(create_text("hello world"))
-//                 .build()
-//         };
-//         let mut app = create_app(vdom());
+    fn manually_generate_working_context(app: &mut App, vdom: VNode) {
+        app.wip_root = Some(app.root);
+        app.next_unit_of_work = Some(app.root);
+        app.fiber_tree
+            .get_mut(app.root)
+            .map(|node| match &mut node.node {
+                Node::Element(Element {
+                    unprocessed_children,
+                    ..
+                }) => {
+                    *unprocessed_children = vec![vdom];
+                }
+                _ => {}
+            });
+    }
 
-//         work_on_dom(&mut app);
-//         commit(&mut app);
+    #[test]
+    fn simple_vdom_creation() {
+        let vdom = || Div.with_child("hello world").into();
+        let mut app = create_app(vdom());
 
-//         compare_vdom_with_dom(vdom(), &app);
-//     }
+        work_on_dom(&mut app);
+        commit(&mut app);
 
-//     #[test]
-//     fn complex_vdom_creation() {
-//         let vdom = || {
-//             create_element(Tag::Div)
-//                 .with_attribute("id", "foo")
-//                 .with_child(
-//                     create_element(Tag::A)
-//                         .with_child(
-//                             create_element(Tag::Div)
-//                                 .with_child(
-//                                     create_element(Tag::Div)
-//                                         .with_child(create_text("bar"))
-//                                         .build(),
-//                                 )
-//                                 .build(),
-//                         )
-//                         .build(),
-//                 )
-//                 .with_child(create_element(Tag::B).build())
-//                 .build()
-//         };
-//         let mut app = create_app(vdom());
+        compare_vdom_with_dom(vdom(), &app);
+    }
 
-//         work_on_dom(&mut app);
-//         commit(&mut app);
+    #[test]
+    fn complex_vdom_creation() {
+        let vdom = || {
+            Div.with_attribute("id", "foo")
+                .with_child(A.with_child(Div.with_child(Div.with_child("bar"))))
+                .with_child(B)
+                .into()
+        };
+        let mut app = create_app(vdom());
 
-//         print_tree(&app);
+        work_on_dom(&mut app);
+        commit(&mut app);
 
-//         compare_vdom_with_dom(vdom(), &app);
-//     }
+        print_tree(&app);
 
-//     #[test]
-//     fn change_text() {
-//         let vdom = || create_text("hello world");
-//         let mut app = create_app(vdom());
+        compare_vdom_with_dom(vdom(), &app);
+    }
 
-//         work_on_dom(&mut app);
-//         commit(&mut app);
+    #[test]
+    fn change_text() {
+        let vdom = || "hello world".into();
+        let mut app = create_app(vdom());
 
-//         compare_vdom_with_dom(vdom(), &app);
+        work_on_dom(&mut app);
+        commit(&mut app);
 
-//         let vdom = || create_text("hello world 2");
+        compare_vdom_with_dom(vdom(), &app);
 
-//         manually_generate_working_context(&mut app, vdom());
+        let vdom = || "hello world 2".into();
 
-//         work_on_dom(&mut app);
-//         commit(&mut app);
+        manually_generate_working_context(&mut app, vdom());
 
-//         compare_vdom_with_dom(vdom(), &app);
-//     }
+        work_on_dom(&mut app);
+        commit(&mut app);
 
-//     #[test]
-//     fn remove_last_element() {
-//         let vdom = || {
-//             create_element(Tag::Div)
-//                 .with_attribute("id", "foo")
-//                 .with_child(
-//                     create_element(Tag::A)
-//                         .with_child(create_element(Tag::Div).build())
-//                         .build(),
-//                 )
-//                 .build()
-//         };
-//         let mut app = create_app(vdom());
+        compare_vdom_with_dom(vdom(), &app);
+    }
 
-//         work_on_dom(&mut app);
-//         commit(&mut app);
+    #[test]
+    fn remove_last_element() {
+        let vdom = || {
+            Div.with_attribute("id", "foo")
+                .with_child(A.with_child(Div))
+                .into()
+        };
+        let mut app = create_app(vdom());
 
-//         compare_vdom_with_dom(vdom(), &app);
+        work_on_dom(&mut app);
+        commit(&mut app);
 
-//         let vdom = || {
-//             create_element(Tag::Div)
-//                 .with_attribute("id", "foo")
-//                 .with_child(create_element(Tag::A).build())
-//                 .build()
-//         };
-//         manually_generate_working_context(&mut app, vdom());
+        compare_vdom_with_dom(vdom(), &app);
 
-//         work_on_dom(&mut app);
-//         commit(&mut app);
+        let vdom = || Div.with_attribute("id", "foo").with_child(A).into();
+        manually_generate_working_context(&mut app, vdom());
 
-//         compare_vdom_with_dom(vdom(), &app);
-//     }
+        work_on_dom(&mut app);
+        commit(&mut app);
 
-//     #[test]
-//     fn insert_in_the_middle() {
-//         let vdom = || {
-//             create_element(Tag::Div)
-//                 .with_child(create_element(Tag::Div).build())
-//                 .with_child(create_element(Tag::Div).build())
-//                 .with_child(create_element(Tag::Div).build())
-//                 .with_child(create_element(Tag::Div).build())
-//                 .build()
-//         };
-//         let mut app = create_app(vdom());
+        compare_vdom_with_dom(vdom(), &app);
+    }
 
-//         work_on_dom(&mut app);
-//         commit(&mut app);
+    #[test]
+    fn insert_in_the_middle() {
+        let vdom = || {
+            Div.with_child(Div)
+                .with_child(Div)
+                .with_child(Div)
+                .with_child(Div)
+                .into()
+        };
+        let mut app = create_app(vdom());
 
-//         print_tree(&app);
+        work_on_dom(&mut app);
+        commit(&mut app);
 
-//         compare_vdom_with_dom(vdom(), &app);
+        print_tree(&app);
 
-//         let vdom = || {
-//             create_element(Tag::Div)
-//                 .with_child(create_element(Tag::Div).build())
-//                 .with_child(create_element(Tag::Button).build())
-//                 .with_child(create_element(Tag::Div).build())
-//                 .with_child(create_element(Tag::Div).build())
-//                 .with_child(create_element(Tag::Div).build())
-//                 .build()
-//         };
-//         manually_generate_working_context(&mut app, vdom());
+        compare_vdom_with_dom(vdom(), &app);
 
-//         work_on_dom(&mut app);
-//         commit(&mut app);
+        let vdom = || {
+            Div.with_child(Div)
+                .with_child(Button)
+                .with_child(Div)
+                .with_child(Div)
+                .with_child(Div)
+                .into()
+        };
+        manually_generate_working_context(&mut app, vdom());
 
-//         print_tree(&app);
-//         println!("{:?}", vdom());
+        work_on_dom(&mut app);
+        commit(&mut app);
 
-//         compare_vdom_with_dom(vdom(), &app);
-//     }
+        print_tree(&app);
+        println!("{:?}", vdom());
 
-//     #[test]
-//     fn drop_remaining() {
-//         let vdom = || {
-//             create_element(Tag::Div)
-//                 .with_child(create_element(Tag::Div).build())
-//                 .with_child(create_element(Tag::Div).build())
-//                 .with_child(create_element(Tag::Div).build())
-//                 .with_child(create_element(Tag::Div).build())
-//                 .build()
-//         };
-//         let mut app = create_app(vdom());
+        compare_vdom_with_dom(vdom(), &app);
+    }
 
-//         work_on_dom(&mut app);
-//         commit(&mut app);
+    #[test]
+    fn drop_remaining() {
+        let vdom = || {
+            Div.with_child(Div)
+                .with_child(Div)
+                .with_child(Div)
+                .with_child(Div)
+                .into()
+        };
+        let mut app = create_app(vdom());
 
-//         print_tree(&app);
+        work_on_dom(&mut app);
+        commit(&mut app);
 
-//         compare_vdom_with_dom(vdom(), &app);
+        print_tree(&app);
 
-//         let vdom = || {
-//             create_element(Tag::Div)
-//                 .with_child(create_element(Tag::Div).build())
-//                 .with_child(create_element(Tag::Div).build())
-//                 .build()
-//         };
-//         manually_generate_working_context(&mut app, vdom());
+        compare_vdom_with_dom(vdom(), &app);
 
-//         work_on_dom(&mut app);
-//         commit(&mut app);
+        let vdom = || Div.with_child(Div).with_child(Div).into();
+        manually_generate_working_context(&mut app, vdom());
 
-//         print_tree(&app);
+        work_on_dom(&mut app);
+        commit(&mut app);
 
-//         compare_vdom_with_dom(vdom(), &app);
-//     }
+        print_tree(&app);
 
-//     #[derive(PartialEq, Debug)]
-//     pub struct TestProp {
-//         index: usize,
-//     }
+        compare_vdom_with_dom(vdom(), &app);
+    }
 
-//     #[component(TestComponent)]
-//     fn test_component(props: &TestProp) -> VNode {
-//         create_text(&format!("test {}", props.index))
-//     }
+    #[derive(PartialEq, Debug)]
+    pub struct TestProp {
+        index: usize,
+    }
 
-//     #[component(TestComponent2)]
-//     fn test_component2(props: &TestProp) -> VNode {
-//         create_element(Tag::Div)
-//             .with_child(create_text(&format!("test {}", props.index)))
-//             .build()
-//     }
+    // #[component(TestComponent)]
+    // fn test_component(props: &TestProp) -> VNode {
+    //     &format!("test {}", props.index).into()
+    // }
 
-//     #[test]
-//     fn component_test() {
-//         let vdom = || {
-//             create_element(Tag::Div)
-//                 .with_child(create_component::<TestComponent>(TestProp { index: 5 }))
-//                 .build()
-//         };
-//         let mut app = create_app(vdom());
+    // #[component(TestComponent2)]
+    // fn test_component2(props: &TestProp) -> VNode {
+    //     Div.with_child(&format!("test {}", props.index)).into()
+    // }
 
-//         work_on_dom(&mut app);
-//         commit(&mut app);
+    // #[test]
+    // fn component_test() {
+    //     let vdom: VNode = || Div.with_child(TestComponent(TestProp { index: 5 })).into();
+    //     let mut app = create_app(vdom());
 
-//         print_tree(&app);
+    //     work_on_dom(&mut app);
+    //     commit(&mut app);
 
-//         compare_vdom_with_dom(vdom(), &app);
+    //     print_tree(&app);
 
-//         let vdom = || {
-//             create_element(Tag::Div)
-//                 .with_child(create_element(Tag::Div).build())
-//                 .with_child(create_element(Tag::Div).build())
-//                 .build()
-//         };
-//         manually_generate_working_context(&mut app, vdom());
+    //     compare_vdom_with_dom(vdom(), &app);
 
-//         work_on_dom(&mut app);
-//         commit(&mut app);
+    //     let vdom = || Div.with_child(Div).with_child(Div).into();
+    //     manually_generate_working_context(&mut app, vdom());
 
-//         print_tree(&app);
+    //     work_on_dom(&mut app);
+    //     commit(&mut app);
 
-//         compare_vdom_with_dom(vdom(), &app);
-//     }
+    //     print_tree(&app);
 
-//     #[test]
-//     fn component_test_changes() {
-//         let vdom = || {
-//             create_element(Tag::Div)
-//                 .with_child(create_component::<TestComponent>(TestProp { index: 5 }))
-//                 .build()
-//         };
-//         let mut app = create_app(vdom());
+    //     compare_vdom_with_dom(vdom(), &app);
+    // }
 
-//         work_on_dom(&mut app);
-//         commit(&mut app);
+    // #[test]
+    // fn component_test_changes() {
+    //     let vdom = || Div.with_child(TestComponent(TestProp { index: 5 })).into();
+    //     let mut app = create_app(vdom());
 
-//         print_tree(&app);
+    //     work_on_dom(&mut app);
+    //     commit(&mut app);
 
-//         compare_vdom_with_dom(vdom(), &app);
+    //     print_tree(&app);
 
-//         let vdom = || {
-//             create_element(Tag::Div)
-//                 .with_child(create_component::<TestComponent2>(TestProp { index: 3 }))
-//                 .build()
-//         };
-//         manually_generate_working_context(&mut app, vdom());
+    //     compare_vdom_with_dom(vdom(), &app);
 
-//         work_on_dom(&mut app);
-//         commit(&mut app);
+    //     let vdom = || Div.with_child(TestComponent2(TestProp { index: 3 })).into();
+    //     manually_generate_working_context(&mut app, vdom());
 
-//         print_tree(&app);
+    //     work_on_dom(&mut app);
+    //     commit(&mut app);
 
-//         compare_vdom_with_dom(vdom(), &app);
-//     }
-// }
+    //     print_tree(&app);
+
+    //     compare_vdom_with_dom(vdom(), &app);
+    // }
+}

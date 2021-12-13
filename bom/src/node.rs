@@ -43,6 +43,7 @@ impl Element {
             }
         }
         self.attributes = attributes;
+
         let events_to_set = events
             .0
             .iter()

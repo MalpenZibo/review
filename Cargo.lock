@@ -164,21 +164,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rust-webpack-template"
-version = "0.1.0"
-dependencies = [
- "bom",
- "console_error_panic_hook",
- "futures",
- "js-sys",
- "wasm-bindgen",
- "wasm-bindgen-futures 0.3.27",
- "wasm-bindgen-test 0.2.50",
- "web-sys",
- "wee_alloc",
-]
-
-[[package]]
 name = "scoped-tls"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -217,6 +202,21 @@ dependencies = [
  "proc-macro2 1.0.29",
  "quote 1.0.10",
  "unicode-xid 0.2.2",
+]
+
+[[package]]
+name = "tictactoe-bom"
+version = "0.1.0"
+dependencies = [
+ "bom",
+ "console_error_panic_hook",
+ "futures",
+ "js-sys",
+ "wasm-bindgen",
+ "wasm-bindgen-futures 0.3.27",
+ "wasm-bindgen-test 0.2.50",
+ "web-sys",
+ "wee_alloc",
 ]
 
 [[package]]

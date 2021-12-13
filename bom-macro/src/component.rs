@@ -169,7 +169,7 @@ pub(crate) fn component_impl(
         ));
     }
 
-    let ret_type = quote_spanned!(return_type.span()=> VNode);
+    let ret_type = quote_spanned!(return_type.span()=> ::bom::VNode);
     let debug_name = format!("{:?}", component_name);
 
     let quoted = quote! {
@@ -184,7 +184,7 @@ pub(crate) fn component_impl(
             }
         }
 
-        impl ComponentProvider for #component_name {
+        impl ::bom::ComponentProvider for #component_name {
             type Props = #props_type;
 
             fn run(#arg) -> #ret_type {

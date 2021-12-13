@@ -1,5 +1,6 @@
 use crate::node::{Element, Node};
 use crate::vdom::VElement;
+use crate::AnyComponent;
 use crate::{Events, VNode};
 use std::collections::HashMap;
 
@@ -22,6 +23,7 @@ pub(crate) enum UpdateData {
         attributes: HashMap<String, String>,
         events: Events,
     },
+    Component(Box<dyn AnyComponent>),
 }
 
 #[derive(Debug)]
@@ -39,6 +41,7 @@ impl std::cmp::PartialEq<VNode> for FiberNode {
                 VNode::Element(VElement { tag: vnode_tag, .. }),
             ) => node_tag == vnode_tag,
             (Node::Text(_), VNode::Text(_)) => true,
+            (Node::Component(_), VNode::Component(_)) => true,
             _ => false,
         }
     }
@@ -121,8 +124,27 @@ impl FiberTree {
     pub fn remove(&mut self, id: FiberId) {
         let reference = self.get(id).map(|node| (node.parent, node.sibling));
         if let Some((Some(parent_id), sibling_id)) = reference {
-            if let Some(parent) = self.get_mut(parent_id) {
-                parent.child = sibling_id
+            if let Some(first_child) = self.get(parent_id).and_then(|node| node.child) {
+                if first_child == id {
+                    if let Some(parent) = self.get_mut(parent_id) {
+                        parent.child = sibling_id
+                    }
+                } else {
+                    let mut prev_sibling = Some(first_child);
+                    while let Some(some_prev_sibling) = prev_sibling {
+                        let current = self.get(some_prev_sibling).and_then(|node| node.sibling);
+                        if current == Some(id) {
+                            break;
+                        } else {
+                            prev_sibling = current;
+                        }
+                    }
+                    if let Some(prev_sibling) = prev_sibling {
+                        if let Some(prev_sibling) = self.get_mut(prev_sibling) {
+                            prev_sibling.sibling = sibling_id
+                        }
+                    }
+                }
             }
         }
 

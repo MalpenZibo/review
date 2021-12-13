@@ -17,5 +17,7 @@ pub use tag::*;
 pub use utils::*;
 pub use vdom::*;
 
+pub use log;
+
 extern crate bom_macro;
 pub use bom_macro::*;

@@ -2,7 +2,6 @@ use crate::node::{Component, Element, Node, Text};
 use crate::{AnyComponent, EventType, HookContext, Tag};
 use std::array::IntoIter;
 use std::collections::HashMap;
-use std::fmt::Display;
 use std::iter::FromIterator;
 use std::rc::Rc;
 use wasm_bindgen::JsValue;
@@ -104,18 +103,6 @@ impl PartialEq for Events {
         self.0
             .iter()
             .all(|(key, value)| other.0.get(key).map_or(false, |v| Rc::ptr_eq(value, v)))
-    }
-}
-
-pub(crate) struct EventsVec(pub Vec<(EventType, Event)>);
-impl std::fmt::Debug for EventsVec {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let events: String = self
-            .0
-            .iter()
-            .map(|v| format!(" {:?}", v.0).to_string())
-            .collect();
-        write!(f, "{}", events)
     }
 }
 
@@ -267,25 +254,33 @@ impl ElementBuilder for Tag {
 #[macro_export]
 macro_rules! callback {
     (|| $body:expr) => {
-        std::rc::Rc::new(Closure::wrap(Box::new(|| $body) as Box<dyn Fn()>));
+        std::rc::Rc::new(::wasm_bindgen::closure::Closure::wrap(
+            ::std::boxed::Box::new(|| $body) as ::std::boxed::Box<dyn Fn()>,
+        ));
     };
     (move || $body:expr) => {
-        std::rc::Rc::new(Closure::wrap(Box::new(move || $body) as Box<dyn Fn()>));
+        std::rc::Rc::new(::wasm_bindgen::closure::Closure::wrap(
+            ::std::boxed::Box::new(move || $body) as ::std::boxed::Box<dyn Fn()>,
+        ));
     };
     (|$args:ident| $body:expr) => {
-        std::rc::Rc::new(Closure::wrap(Box::new(|$args| $body) as Box<dyn Fn(_)>));
+        std::rc::Rc::new(::wasm_bindgen::closure::Closure::wrap(
+            ::std::boxed::Box::new(|$args| $body) as ::std::boxed::Box<dyn Fn(_)>,
+        ));
     };
     (move |$args:ident| $body:expr) => {
-        std::rc::Rc::new(Closure::wrap(Box::new(move |$args| $body) as Box<dyn Fn(_)>));
+        std::rc::Rc::new(::wasm_bindgen::closure::Closure::wrap(
+            ::std::boxed::Box::new(move |$args| $body) as ::std::boxed::Box<dyn Fn(_)>,
+        ));
     };
     (|$args:ident : $args_type:ty | $body:expr) => {
-        std::rc::Rc::new(Closure::wrap(
-            Box::new(|$args: $args_type| $body) as Box<dyn Fn(_)>
+        std::rc::Rc::new(::wasm_bindgen::closure::Closure::wrap(
+            ::std::boxed::Box::new(|$args: $args_type| $body) as ::std::boxed::Box<dyn Fn(_)>,
         ));
     };
     (move |$args:ident : $args_type:ty| $body:expr) => {
-        std::rc::Rc::new(Closure::wrap(
-            Box::new(move |$args: $args_type| $body) as Box<dyn Fn(_)>
+        std::rc::Rc::new(::wasm_bindgen::closure::Closure::wrap(
+            ::std::boxed::Box::new(move |$args: $args_type| $body) as ::std::boxed::Box<dyn Fn(_)>,
         ));
     };
 }
@@ -354,20 +349,20 @@ mod tests {
         cua: u32,
     }
 
-    #[component(Component1)]
-    fn component(props: &Test) -> VNode {
-        format!("{}", props.cua).into()
-    }
+    // #[component(Component1)]
+    // fn component(props: &Test) -> VNode {
+    //     format!("{}", props.cua).into()
+    // }
 
-    #[test]
-    fn create_component() {
-        let component: VNode = Component1(Test { cua: 8 }).into();
+    // #[test]
+    // fn create_component() {
+    //     let component: VNode = Component1(Test { cua: 8 }).into();
 
-        assert_eq!(
-            component,
-            VNode::Component(Box::new(Component1(Test { cua: 8 })))
-        );
-    }
+    //     assert_eq!(
+    //         component,
+    //         VNode::Component(Box::new(Component1(Test { cua: 8 })))
+    //     );
+    // }
 
     #[test]
     fn create_complex_vdom() {
