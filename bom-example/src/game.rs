@@ -93,14 +93,18 @@ pub fn game() -> VNode {
 
     let status: VNode = match calculate_winner(&current) {
         Some(winner) => format!("Winner {}", winner).into(),
-        _ => format!(
-            "Next player: {}",
-            if game_state.value.x_is_next {
-                SquareValue::X
-            } else {
-                SquareValue::O
-            }
-        )
+        _ => if current.iter().any(|s| s.is_none()) {
+            format!(
+                "Next player: {}",
+                if game_state.value.x_is_next {
+                    SquareValue::X
+                } else {
+                    SquareValue::O
+                }
+            )
+        } else {
+            "Tie".to_owned()
+        }
         .into(),
     };
 

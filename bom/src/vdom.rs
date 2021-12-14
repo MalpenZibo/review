@@ -3,7 +3,6 @@ use crate::{AnyComponent, EventType, HookContext, Tag};
 use std::array::IntoIter;
 use std::collections::HashMap;
 use std::iter::FromIterator;
-use std::rc::Rc;
 use wasm_bindgen::JsValue;
 
 #[derive(Debug, PartialEq)]
@@ -79,9 +78,9 @@ impl VNode {
     }
 }
 
-pub type Event = Rc<dyn AsRef<JsValue>>;
+pub type Event = Box<dyn AsRef<JsValue>>;
 
-#[derive(Clone, Default)]
+#[derive(Default)]
 pub struct Events(pub HashMap<EventType, Event>);
 impl std::fmt::Debug for Events {
     // Print out all of the event names for this VirtualNode
@@ -100,9 +99,12 @@ impl PartialEq for Events {
         if self.0.len() != other.0.len() {
             return false;
         }
-        self.0
-            .iter()
-            .all(|(key, value)| other.0.get(key).map_or(false, |v| Rc::ptr_eq(value, v)))
+        self.0.iter().all(|(key, value)| {
+            other
+                .0
+                .get(key)
+                .map_or(false, |v| value.as_ref().as_ref() == v.as_ref().as_ref())
+        })
     }
 }
 
@@ -254,32 +256,32 @@ impl ElementBuilder for Tag {
 #[macro_export]
 macro_rules! callback {
     (|| $body:expr) => {
-        std::rc::Rc::new(::wasm_bindgen::closure::Closure::wrap(
+        ::std::boxed::Box::new(::wasm_bindgen::closure::Closure::wrap(
             ::std::boxed::Box::new(|| $body) as ::std::boxed::Box<dyn Fn()>,
         ));
     };
     (move || $body:expr) => {
-        std::rc::Rc::new(::wasm_bindgen::closure::Closure::wrap(
+        ::std::boxed::Box::new(::wasm_bindgen::closure::Closure::wrap(
             ::std::boxed::Box::new(move || $body) as ::std::boxed::Box<dyn Fn()>,
         ));
     };
     (|$args:ident| $body:expr) => {
-        std::rc::Rc::new(::wasm_bindgen::closure::Closure::wrap(
+        ::std::boxed::Box::new(::wasm_bindgen::closure::Closure::wrap(
             ::std::boxed::Box::new(|$args| $body) as ::std::boxed::Box<dyn Fn(_)>,
         ));
     };
     (move |$args:ident| $body:expr) => {
-        std::rc::Rc::new(::wasm_bindgen::closure::Closure::wrap(
+        ::std::boxed::Box::new(::wasm_bindgen::closure::Closure::wrap(
             ::std::boxed::Box::new(move |$args| $body) as ::std::boxed::Box<dyn Fn(_)>,
         ));
     };
     (|$args:ident : $args_type:ty | $body:expr) => {
-        std::rc::Rc::new(::wasm_bindgen::closure::Closure::wrap(
+        ::std::boxed::Box::new(::wasm_bindgen::closure::Closure::wrap(
             ::std::boxed::Box::new(|$args: $args_type| $body) as ::std::boxed::Box<dyn Fn(_)>,
         ));
     };
     (move |$args:ident : $args_type:ty| $body:expr) => {
-        std::rc::Rc::new(::wasm_bindgen::closure::Closure::wrap(
+        ::std::boxed::Box::new(::wasm_bindgen::closure::Closure::wrap(
             ::std::boxed::Box::new(move |$args: $args_type| $body) as ::std::boxed::Box<dyn Fn(_)>,
         ));
     };
@@ -303,12 +305,10 @@ macro_rules! children {
 mod tests {
 
     use super::*;
-    use crate::ComponentProvider;
     use crate::Events;
     use crate::Tag::Div;
     use crate::VElement;
     use crate::VNode;
-    use bom_macro::component;
     use std::collections::HashMap;
 
     #[test]
