@@ -23,15 +23,7 @@ pub fn main_js() -> Result<(), JsValue> {
 
     bom::init_logger();
 
-    bom::render(
-        Game(()).into(),
-        web_sys::window()
-            .unwrap()
-            .document()
-            .unwrap()
-            .get_element_by_id("root")
-            .unwrap(),
-    );
+    bom::render(Game(()).into(), "root");
 
     Ok(())
 }

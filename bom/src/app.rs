@@ -21,11 +21,18 @@ thread_local! {
     pub(crate) static APP: RefCell<Option<App>> = RefCell::new(None);
 }
 
-pub fn render(element: VNode, container: web_sys::Element) {
+pub fn render(element: VNode, container: &str) {
+    let root_dom = web_sys::window()
+        .unwrap()
+        .document()
+        .unwrap()
+        .get_element_by_id(container)
+        .expect("error during root container retrival");
+
     APP.with(|app| {
         let mut fiber_tree = FiberTree::default();
         let root_id = fiber_tree.new_node(Node::Element(Element {
-            dom: Some(container),
+            dom: Some(root_dom),
             tag: Tag::Empty,
             attributes: HashMap::with_capacity(0),
             events: Events(HashMap::with_capacity(0)),
