@@ -58,6 +58,10 @@ fn calculate_winner(squares: &[Option<SquareValue>]) -> Option<SquareValue> {
     None
 }
 
+fn test() {
+    //let ff = use_state(33);
+}
+
 #[component(Game)]
 pub fn game() -> VNode {
     let game_state = use_state(GameState {
@@ -65,6 +69,12 @@ pub fn game() -> VNode {
         step_index: 0,
         x_is_next: true,
     });
+
+    if 4 == 3 {
+        //let g = use_state(4);
+
+        let cc = test();
+    }
 
     let current = game_state.value.squares_history[game_state.value.step_index];
 

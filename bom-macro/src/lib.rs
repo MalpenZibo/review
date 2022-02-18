@@ -4,6 +4,7 @@ use crate::component::ComponentName;
 use syn::parse_macro_input;
 
 mod component;
+mod component_body;
 
 #[proc_macro_attribute]
 pub fn component(

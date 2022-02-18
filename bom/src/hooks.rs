@@ -27,7 +27,7 @@ impl<T, S: Fn(T) -> ()> State<T, S> {
     }
 }
 
-pub fn use_state<T: Any + Debug>(initial_value: T) -> Rc<State<T, impl Fn(T)>> {
+pub fn use_state<T: Any + Debug>(initial_value: T, context: u32) -> Rc<State<T, impl Fn(T)>> {
     let (fiber_target_id, hook): (FiberId, Rc<RefCell<dyn Any>>) =
         HOOK_CONTEXT.with(|mut hook_context| {
             let hook_position = hook_context.1.counter;
@@ -91,7 +91,7 @@ mod tests {
         };
 
         HOOK_CONTEXT.set((0, &mut context), || {
-            let state = use_state(7);
+            let state = use_state(7, 3);
 
             assert_eq!(state.value, Rc::new(7));
 
@@ -101,7 +101,7 @@ mod tests {
         context.counter = 0;
 
         HOOK_CONTEXT.set((0, &mut context), || {
-            let state = use_state(7);
+            let state = use_state(7, 3);
 
             assert_eq!(state.value, Rc::new(9));
         })
@@ -121,9 +121,9 @@ mod tests {
         };
 
         HOOK_CONTEXT.set((0, &mut context), || {
-            let int_state = use_state(7);
-            let string_state = use_state("test".to_owned());
-            let struct_state = use_state(Test { i: 9, f: 3.4 });
+            let int_state = use_state(7, 3);
+            let string_state = use_state("test".to_owned(), 3);
+            let struct_state = use_state(Test { i: 9, f: 3.4 }, 3);
 
             assert_eq!(int_state.value, Rc::new(7));
             assert_eq!(string_state.value, Rc::new("test".to_owned()));
@@ -137,9 +137,9 @@ mod tests {
         context.counter = 0;
 
         HOOK_CONTEXT.set((0, &mut context), || {
-            let int_state = use_state(7);
-            let string_state = use_state("test".to_owned());
-            let struct_state = use_state(Test { i: 9, f: 3.4 });
+            let int_state = use_state(7, 3);
+            let string_state = use_state("test".to_owned(), 3);
+            let struct_state = use_state(Test { i: 9, f: 3.4 }, 3);
 
             assert_eq!(int_state.value, Rc::new(9));
             assert_eq!(string_state.value, Rc::new("test 2".to_owned()));
