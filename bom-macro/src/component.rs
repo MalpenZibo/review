@@ -1,6 +1,5 @@
-use crate::hook::BodyRewriter;
-use proc_macro2::Span;
-use proc_macro2::TokenStream;
+use crate::body::BodyRewriter;
+use proc_macro2::{Span, TokenStream};
 use quote::{quote, quote_spanned, ToTokens};
 use syn::parse::{Parse, ParseStream};
 use syn::spanned::Spanned;

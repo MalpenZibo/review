@@ -1,13 +1,10 @@
+use crate::body::BodyRewriter;
 use proc_macro2::{Span, TokenStream};
 use proc_macro_error::emit_error;
 use quote::quote;
 use syn::parse::{Parse, ParseStream};
 use syn::visit_mut;
 use syn::{Ident, ItemFn, Signature};
-
-mod body;
-
-pub use body::BodyRewriter;
 
 #[derive(Clone)]
 pub struct HookFn {

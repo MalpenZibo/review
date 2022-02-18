@@ -1,17 +1,7 @@
-use crate::board::Board;
-use crate::board::BoardProps;
-use bom::callback;
-use bom::children;
-use bom::component;
-use bom::hook;
-use bom::use_state;
-use bom::ElementBuilder;
+use crate::board::{Board, BoardProps};
 use bom::EventType::OnClick;
-use bom::Tag::Button;
-use bom::Tag::Div;
-use bom::Tag::Li;
-use bom::Tag::Ol;
-use bom::VNode;
+use bom::Tag::{Button, Div, Li, Ol};
+use bom::{callback, children, component, use_state, ElementBuilder, VNode};
 use std::fmt::Display;
 use std::rc::Rc;
 
@@ -59,16 +49,6 @@ fn calculate_winner(squares: &[Option<SquareValue>]) -> Option<SquareValue> {
     None
 }
 
-#[hook]
-fn use_test() {
-    let ff = use_state(33);
-}
-
-#[hook]
-fn use_test2(ciao: u32) {
-    let ff = use_state(ciao);
-}
-
 #[component(Game)]
 pub fn game() -> VNode {
     let game_state = use_state(GameState {
@@ -76,10 +56,6 @@ pub fn game() -> VNode {
         step_index: 0,
         x_is_next: true,
     });
-
-    let g = use_test2(4);
-
-    let cc = use_test();
 
     let current = game_state.value.squares_history[game_state.value.step_index];
 

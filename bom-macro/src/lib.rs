@@ -1,10 +1,8 @@
-use crate::component::component_impl;
-use crate::component::Component;
-use crate::component::ComponentName;
-use crate::hook::hook_impl;
-use crate::hook::HookFn;
+use crate::component::{component_impl, Component, ComponentName};
+use crate::hook::{hook_impl, HookFn};
 use syn::parse_macro_input;
 
+mod body;
 mod component;
 mod hook;
 
