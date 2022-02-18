@@ -4,7 +4,7 @@ use crate::AnyComponent;
 use crate::{Events, VNode};
 use std::collections::HashMap;
 
-pub(crate) type FiberId = usize;
+pub type FiberId = usize;
 
 #[derive(Debug)]
 pub(crate) struct FiberNode {
@@ -104,15 +104,13 @@ impl FiberTree {
                     child.sibling = Some(old_sibling)
                 }
             }
-        } else {
-            if let Some(old_child) = self
-                .nodes
-                .get_mut(parent_id)
-                .and_then(|parent| parent.child.replace(child_id))
-            {
-                if let Some(child) = self.nodes.get_mut(child_id) {
-                    child.sibling = Some(old_child)
-                }
+        } else if let Some(old_child) = self
+            .nodes
+            .get_mut(parent_id)
+            .and_then(|parent| parent.child.replace(child_id))
+        {
+            if let Some(child) = self.nodes.get_mut(child_id) {
+                child.sibling = Some(old_child)
             }
         }
 

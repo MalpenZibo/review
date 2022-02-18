@@ -1,16 +1,7 @@
-use crate::board::Board;
-use crate::board::BoardProps;
-use bom::callback;
-use bom::children;
-use bom::component;
-use bom::use_state;
-use bom::ElementBuilder;
+use crate::board::{Board, BoardProps};
 use bom::EventType::OnClick;
-use bom::Tag::Button;
-use bom::Tag::Div;
-use bom::Tag::Li;
-use bom::Tag::Ol;
-use bom::VNode;
+use bom::Tag::{Button, Div, Li, Ol};
+use bom::{callback, children, component, use_state, ElementBuilder, VNode};
 use std::fmt::Display;
 use std::rc::Rc;
 
@@ -47,8 +38,7 @@ fn calculate_winner(squares: &[Option<SquareValue>]) -> Option<SquareValue> {
         [2, 4, 6],
     ];
 
-    for i in 0..lines.len() {
-        let [a, b, c] = lines[i];
+    for [a, b, c] in lines {
         match (squares.get(a), squares.get(b), squares.get(c)) {
             (Some(Some(a)), Some(Some(b)), Some(Some(c))) if a == b && a == c => return Some(*a),
             _ => {}
@@ -77,7 +67,7 @@ pub fn game() -> VNode {
             let desc = if i > 0 {
                 format!("Go to move # {}", i)
             } else {
-                format!("Go to game start")
+                "Go to game start".to_string()
             };
             Li.with_child(Button.with_child(desc).with_event(OnClick, {
                 let game_state = game_state.clone();
@@ -109,9 +99,9 @@ pub fn game() -> VNode {
     };
 
     let handle_click = {
-        let game_state = game_state.clone();
+        let game_state = game_state;
         move |index: usize| {
-            let mut new_square = current.clone();
+            let mut new_square = current;
             if calculate_winner(&new_square).is_none() {
                 if let Some(square @ None) = new_square.get_mut(index) {
                     *square = Some(if game_state.value.x_is_next {
