@@ -49,7 +49,7 @@ pub fn hook_impl(component: HookFn) -> syn::Result<TokenStream> {
         sig,
         mut block,
         ..
-    } = original_fn.clone();
+    } = original_fn;
 
     let Signature {
         ref fn_token,
@@ -67,9 +67,7 @@ pub fn hook_impl(component: HookFn) -> syn::Result<TokenStream> {
     let mut body_rewriter = BodyRewriter::default();
     visit_mut::visit_block_mut(&mut body_rewriter, &mut *block);
 
-    let some_inputs = inputs.len() > 0;
-
-    let prev_inputs = if some_inputs {
+    let prev_inputs = if !inputs.is_empty() {
         quote!( #inputs, )
     } else {
         quote!()

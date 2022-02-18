@@ -11,12 +11,12 @@ pub struct HookContext {
     pub counter: usize,
 }
 
-pub struct State<T, S: Fn(T) -> ()> {
+pub struct State<T, S: Fn(T)> {
     pub value: Rc<T>,
     set: S,
 }
 
-impl<T, S: Fn(T) -> ()> State<T, S> {
+impl<T, S: Fn(T)> State<T, S> {
     pub fn set(&self, new_value: T) {
         (self.set)(new_value);
     }
@@ -32,7 +32,7 @@ pub fn use_state<T: Any + Debug>(
 
         if hook_position >= hook_context.hooks_state.len() {
             let initial_value = Rc::new(RefCell::new(Rc::new(initial_value)));
-            hook_context.hooks_state.push(initial_value.clone());
+            hook_context.hooks_state.push(initial_value);
         }
         let cur_value = hook_context
             .hooks_state
@@ -70,7 +70,7 @@ pub fn use_state<T: Any + Debug>(
         .expect("Incompatible hook type. Hooks must always be called in the same order");
 
     Rc::new(State {
-        value: Rc::clone(&hook),
+        value: Rc::clone(hook),
         set: updater,
     })
 }

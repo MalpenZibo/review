@@ -8,7 +8,7 @@ use std::rc::Rc;
 
 pub struct SquareProps {
     pub value: Option<SquareValue>,
-    pub on_click: Rc<dyn Fn() -> ()>,
+    pub on_click: Rc<dyn Fn()>,
 }
 
 #[component(Square)]

@@ -10,7 +10,7 @@ pub trait ComponentProvider: Debug {
 
     fn run(context: &mut (FiberId, &mut HookContext), props: &Self::Props) -> VNode;
 
-    fn get_props<'a>(&'a self) -> &'a Self::Props;
+    fn get_props(&self) -> &Self::Props;
 }
 
 pub trait AnyComponent: Debug {

@@ -25,16 +25,13 @@ impl Element {
                     None => Some((k, v)),
                     _ => None,
                 });
-        let attributes_to_remove = self.attributes.keys().filter_map(|k| {
-            if !attributes.contains_key(k) {
-                Some(k)
-            } else {
-                None
-            }
-        });
+        let attributes_to_remove = self
+            .attributes
+            .keys()
+            .filter(|k| !attributes.contains_key(*k));
         for a in attributes_to_set {
             if let Some(dom) = &self.dom {
-                dom.set_attribute(&a.0, &a.1).expect("set attribute error");
+                dom.set_attribute(a.0, a.1).expect("set attribute error");
             }
         }
         for a in attributes_to_remove {
@@ -44,13 +41,10 @@ impl Element {
         }
         self.attributes = attributes;
 
-        let events_to_set = events
-            .0
-            .iter()
-            .filter_map(|(k, v)| match self.events.0.get(k) {
-                Some(old_v) => Some((Some(old_v), k, v)),
-                None => Some((None, k, v)),
-            });
+        let events_to_set = events.0.iter().map(|(k, v)| match self.events.0.get(k) {
+            Some(old_v) => (Some(old_v), k, v),
+            None => (None, k, v),
+        });
         let events_to_remove = self.events.0.iter().filter_map(|(k, v)| {
             if !events.0.contains_key(k) {
                 Some((k, v))
@@ -129,7 +123,7 @@ impl Node {
                     dom.replace(document.create_element(tag.as_ref()).unwrap());
                     for a in attributes {
                         if let Some(dom) = dom {
-                            dom.set_attribute(&a.0, &a.1).expect("set attribute error");
+                            dom.set_attribute(a.0, a.1).expect("set attribute error");
                         }
                     }
                     for (event_type, event) in &events.0 {
@@ -143,7 +137,7 @@ impl Node {
                     }
                 }
                 Node::Text(Text { dom, text }) => {
-                    dom.replace(document.create_text_node(&text));
+                    dom.replace(document.create_text_node(text));
                 }
                 _ => {}
             }

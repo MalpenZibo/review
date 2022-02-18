@@ -52,7 +52,7 @@ impl std::cmp::PartialEq<VNode> for VNode {
 }
 
 impl VNode {
-    pub(crate) fn to_node(self) -> Node {
+    pub(crate) fn materalize(self) -> Node {
         match self {
             VNode::Element(VElement {
                 tag,
@@ -85,11 +85,7 @@ pub struct Events(pub HashMap<EventType, Event>);
 impl std::fmt::Debug for Events {
     // Print out all of the event names for this VirtualNode
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let events: String = self
-            .0
-            .keys()
-            .map(|key| format!(" {:?}", key).to_string())
-            .collect();
+        let events: String = self.0.keys().map(|key| format!(" {:?}", key)).collect();
         write!(f, "{}", events)
     }
 }
@@ -235,7 +231,7 @@ impl ElementBuilder for Tag {
             children: Vec::with_capacity(children.len()),
         };
         for c in children {
-            element.children.push(c.into());
+            element.children.push(c);
         }
 
         element

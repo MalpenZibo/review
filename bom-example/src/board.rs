@@ -9,7 +9,7 @@ use std::rc::Rc;
 
 pub struct BoardProps {
     pub squares: [Option<SquareValue>; 9],
-    pub on_click: Rc<dyn Fn(usize) -> ()>,
+    pub on_click: Rc<dyn Fn(usize)>,
 }
 
 #[component(Board)]
@@ -19,7 +19,7 @@ pub fn board(props: &BoardProps) -> VNode {
 
         Square(SquareProps {
             value: match props.squares.get(index) {
-                Some(v) => v.clone(),
+                Some(v) => *v,
                 _ => None,
             },
             on_click: Rc::new(move || on_click(index)),

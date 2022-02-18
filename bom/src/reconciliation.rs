@@ -10,13 +10,7 @@ pub(crate) fn perform_unit_of_work(
 ) -> Option<FiberId> {
     if fiber_tree
         .get(id)
-        .map(|fiber_node| {
-            if let Node::Component(Component { .. }) = fiber_node.node {
-                true
-            } else {
-                false
-            }
-        })
+        .map(|fiber_node| matches!(fiber_node.node, Node::Component(Component { .. })))
         .unwrap_or(false)
     {
         update_component_node(id, fiber_tree)
@@ -129,8 +123,8 @@ fn reconcile_children(id: FiberId, elements: Vec<VNode>, fiber_tree: &mut FiberT
 
                     None
                 }
-                Some(old_fiber) if old_fiber != &element => Some(element.to_node()),
-                None => Some(element.to_node()),
+                Some(old_fiber) if old_fiber != &element => Some(element.materalize()),
+                None => Some(element.materalize()),
                 _ => None,
             }
         };
@@ -229,43 +223,40 @@ pub(crate) fn commit(id: Option<FiberId>, fiber_tree: &mut FiberTree) {
                     ) {
                         (Some(Node::Element(Element { dom: Some(dom), .. })), Some(parent_dom)) => {
                             parent_dom
-                                .append_child(&dom)
+                                .append_child(dom)
                                 .expect("append element child error");
                         }
                         (Some(Node::Text(Text { dom: Some(dom), .. })), Some(parent_dom)) => {
                             parent_dom
-                                .append_child(&dom)
+                                .append_child(dom)
                                 .expect("append text child error");
                         }
                         _ => {}
                     },
                     EffectTag::Update(UpdateData::Element { attributes, events }) => {
-                        match fiber_tree
+                        if let Some(Node::Element(element)) = fiber_tree
                             .get_mut(id)
                             .map(|fiber_node| &mut fiber_node.node)
                         {
-                            Some(Node::Element(element)) => {
-                                element.update_element_dom(attributes, events)
-                            }
-                            _ => {}
+                            element.update_element_dom(attributes, events)
                         }
                     }
-                    EffectTag::Update(UpdateData::Text(new_text)) => match fiber_tree
-                        .get_mut(id)
-                        .map(|fiber_node| &mut fiber_node.node)
-                    {
-                        Some(Node::Text(text)) => text.update_text_dom(new_text),
-                        _ => {}
-                    },
-                    EffectTag::Update(UpdateData::Component(new_component)) => match fiber_tree
-                        .get_mut(id)
-                        .map(|fiber_node| &mut fiber_node.node)
-                    {
-                        Some(Node::Component(Component { function, .. })) => {
+                    EffectTag::Update(UpdateData::Text(new_text)) => {
+                        if let Some(Node::Text(text)) = fiber_tree
+                            .get_mut(id)
+                            .map(|fiber_node| &mut fiber_node.node)
+                        {
+                            text.update_text_dom(new_text)
+                        }
+                    }
+                    EffectTag::Update(UpdateData::Component(new_component)) => {
+                        if let Some(Node::Component(Component { function, .. })) = fiber_tree
+                            .get_mut(id)
+                            .map(|fiber_node| &mut fiber_node.node)
+                        {
                             *function = new_component;
                         }
-                        _ => {}
-                    },
+                    }
                     EffectTag::Deletion => {
                         match (fiber_tree.get(id), parent_dom) {
                             (

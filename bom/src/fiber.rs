@@ -104,15 +104,13 @@ impl FiberTree {
                     child.sibling = Some(old_sibling)
                 }
             }
-        } else {
-            if let Some(old_child) = self
-                .nodes
-                .get_mut(parent_id)
-                .and_then(|parent| parent.child.replace(child_id))
-            {
-                if let Some(child) = self.nodes.get_mut(child_id) {
-                    child.sibling = Some(old_child)
-                }
+        } else if let Some(old_child) = self
+            .nodes
+            .get_mut(parent_id)
+            .and_then(|parent| parent.child.replace(child_id))
+        {
+            if let Some(child) = self.nodes.get_mut(child_id) {
+                child.sibling = Some(old_child)
             }
         }
 
