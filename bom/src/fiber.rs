@@ -4,7 +4,7 @@ use crate::AnyComponent;
 use crate::{Events, VNode};
 use std::collections::HashMap;
 
-pub(crate) type FiberId = usize;
+pub type FiberId = usize;
 
 #[derive(Debug)]
 pub(crate) struct FiberNode {

@@ -68,8 +68,8 @@ impl VNode {
             }),
             VNode::Text(text) => Node::Text(Text { text, dom: None }),
             VNode::Component(component) => Node::Component(Component {
-                hooks: HookContext {
-                    hooks: Vec::default(),
+                hook_context: HookContext {
+                    hooks_state: Vec::default(),
                     counter: 0,
                 },
                 function: component,

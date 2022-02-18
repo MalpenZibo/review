@@ -1,9 +1,10 @@
+use proc_macro2::Span;
 use proc_macro_error::emit_error;
 use std::sync::{Arc, Mutex};
 use syn::visit_mut::VisitMut;
 use syn::{
     parse_quote, visit_mut, Expr, ExprCall, ExprClosure, ExprForLoop, ExprIf, ExprLoop, ExprMatch,
-    ExprWhile, Item,
+    ExprWhile, Ident, Item,
 };
 
 #[derive(Debug, Default)]
@@ -28,7 +29,7 @@ impl BodyRewriter {
 
 impl VisitMut for BodyRewriter {
     fn visit_expr_call_mut(&mut self, i: &mut ExprCall) {
-        //let ctx_ident = Ident::new("ctx", Span::mixed_site());
+        let ctx_ident = Ident::new("context", Span::mixed_site());
 
         // Only rewrite hook calls.
         if let Expr::Path(ref m) = &*i.func {
@@ -41,7 +42,7 @@ impl VisitMut for BodyRewriter {
                             help = "move hooks to the top-level of your function.";
                         );
                     } else {
-                        i.args.push(parse_quote!(3));
+                        i.args.push(parse_quote!(#ctx_ident));
                     }
 
                     return;

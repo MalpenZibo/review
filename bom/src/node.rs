@@ -104,7 +104,7 @@ impl Text {
 
 #[derive(Debug)]
 pub(crate) struct Component {
-    pub hooks: HookContext,
+    pub hook_context: HookContext,
     pub function: Box<dyn AnyComponent>,
 }
 

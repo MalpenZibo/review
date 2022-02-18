@@ -1,4 +1,5 @@
 use crate::component_body::BodyRewriter;
+use proc_macro2::Span;
 use proc_macro2::TokenStream;
 use quote::{quote, quote_spanned, ToTokens};
 use syn::parse::{Parse, ParseStream};
@@ -173,6 +174,8 @@ pub(crate) fn component_impl(
     let ret_type = quote_spanned!(return_type.span()=> ::bom::VNode);
     let debug_name = format!("{:?}", component_name);
 
+    let ctx_ident = Ident::new("context", Span::mixed_site());
+
     let mut body_rewriter = BodyRewriter::default();
     visit_mut::visit_block_mut(&mut body_rewriter, &mut *block);
 
@@ -191,7 +194,7 @@ pub(crate) fn component_impl(
         impl ::bom::ComponentProvider for #component_name {
             type Props = #props_type;
 
-            fn run(#arg) -> #ret_type {
+            fn run(#ctx_ident: (::bom::FiberId, &mut ::bom::HookContext), #arg) -> #ret_type {
                 #block
             }
 
@@ -200,5 +203,6 @@ pub(crate) fn component_impl(
             }
         }
     };
+
     Ok(quoted)
 }

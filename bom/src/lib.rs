@@ -12,6 +12,8 @@ mod vdom;
 pub use app::*;
 pub use component::*;
 pub use events::*;
+pub use fiber::FiberId;
+pub use hooks::HookContext;
 pub use hooks::*;
 pub use tag::*;
 pub use utils::*;

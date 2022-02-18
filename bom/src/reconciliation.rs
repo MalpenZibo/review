@@ -2,7 +2,6 @@ use crate::fiber::{EffectTag, FiberId, FiberNode, FiberTree, UpdateData};
 use crate::node::{Component, Element, Node, Text};
 use crate::VElement;
 use crate::VNode;
-use crate::HOOK_CONTEXT;
 
 pub(crate) fn perform_unit_of_work(
     id: FiberId,
@@ -46,7 +45,7 @@ fn update_component_node(id: FiberId, fiber_tree: &mut FiberTree) {
     if let Some((
         effect_tag,
         Node::Component(Component {
-            hooks,
+            ref mut hook_context,
             function: old_function,
         }),
     )) = fiber_tree
@@ -60,9 +59,7 @@ fn update_component_node(id: FiberId, fiber_tree: &mut FiberTree) {
                 old_function
             };
 
-        hooks.counter = 0;
-        let hooks = (id, hooks);
-        let elements = HOOK_CONTEXT.set(hooks, || vec![function.run()]);
+        let elements = vec![function.run((id, hook_context))];
         reconcile_children(id, elements, fiber_tree);
     }
 }
@@ -372,7 +369,7 @@ mod tests {
         commit_work(app, || true);
     }
 
-    fn compare_vdom_with_dom(vdom: VNode, app: &App) {
+    fn compare_vdom_with_dom(vdom: VNode, app: &mut App) {
         println!("vdom: {:?}", vdom);
         let mut vnode_buffer = vec![VNode::Element(VElement {
             tag: Tag::Empty,
@@ -389,7 +386,7 @@ mod tests {
                     next = app.fiber_tree.get(current).and_then(|node| node.sibling);
                 }
                 if let Some(vnode) = vnode_buffer.pop() {
-                    match (vnode, app.fiber_tree.get(node_id).map(|n| &n.node)) {
+                    match (vnode, app.fiber_tree.get_mut(node_id).map(|n| &mut n.node)) {
                         (
                             VNode::Element(VElement {
                                 tag: vtag,
@@ -418,8 +415,14 @@ mod tests {
                             println!("node: {:?}", text);
                             assert_eq!(vtext, *text);
                         }
-                        (VNode::Component(component), Some(Node::Component(Component { .. }))) => {
-                            vnode_buffer.push(component.run());
+                        (
+                            VNode::Component(component),
+                            Some(Node::Component(Component {
+                                ref mut hook_context,
+                                ..
+                            })),
+                        ) => {
+                            vnode_buffer.push(component.run((node_id, hook_context)));
                         }
                         _ => {
                             panic!("Different node");
@@ -495,7 +498,7 @@ mod tests {
         work_on_dom(&mut app);
         commit(&mut app);
 
-        compare_vdom_with_dom(vdom(), &app);
+        compare_vdom_with_dom(vdom(), &mut app);
     }
 
     #[test]
@@ -513,7 +516,7 @@ mod tests {
 
         print_tree(&app);
 
-        compare_vdom_with_dom(vdom(), &app);
+        compare_vdom_with_dom(vdom(), &mut app);
     }
 
     #[test]
@@ -524,7 +527,7 @@ mod tests {
         work_on_dom(&mut app);
         commit(&mut app);
 
-        compare_vdom_with_dom(vdom(), &app);
+        compare_vdom_with_dom(vdom(), &mut app);
 
         let vdom = || "hello world 2".into();
 
@@ -533,7 +536,7 @@ mod tests {
         work_on_dom(&mut app);
         commit(&mut app);
 
-        compare_vdom_with_dom(vdom(), &app);
+        compare_vdom_with_dom(vdom(), &mut app);
     }
 
     #[test]
@@ -548,7 +551,7 @@ mod tests {
         work_on_dom(&mut app);
         commit(&mut app);
 
-        compare_vdom_with_dom(vdom(), &app);
+        compare_vdom_with_dom(vdom(), &mut app);
 
         let vdom = || Div.with_attribute("id", "foo").with_child(A).into();
         manually_generate_working_context(&mut app, vdom());
@@ -556,7 +559,7 @@ mod tests {
         work_on_dom(&mut app);
         commit(&mut app);
 
-        compare_vdom_with_dom(vdom(), &app);
+        compare_vdom_with_dom(vdom(), &mut app);
     }
 
     #[test]
@@ -575,7 +578,7 @@ mod tests {
 
         print_tree(&app);
 
-        compare_vdom_with_dom(vdom(), &app);
+        compare_vdom_with_dom(vdom(), &mut app);
 
         let vdom = || {
             Div.with_child(Div)
@@ -593,7 +596,7 @@ mod tests {
         print_tree(&app);
         println!("{:?}", vdom());
 
-        compare_vdom_with_dom(vdom(), &app);
+        compare_vdom_with_dom(vdom(), &mut app);
     }
 
     #[test]
@@ -612,7 +615,7 @@ mod tests {
 
         print_tree(&app);
 
-        compare_vdom_with_dom(vdom(), &app);
+        compare_vdom_with_dom(vdom(), &mut app);
 
         let vdom = || Div.with_child(Div).with_child(Div).into();
         manually_generate_working_context(&mut app, vdom());
@@ -622,7 +625,7 @@ mod tests {
 
         print_tree(&app);
 
-        compare_vdom_with_dom(vdom(), &app);
+        compare_vdom_with_dom(vdom(), &mut app);
     }
 
     #[derive(PartialEq, Debug)]

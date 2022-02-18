@@ -1,25 +1,30 @@
+use crate::fiber::FiberId;
+use crate::HookContext;
 use crate::VNode;
 use std::any::Any;
 use std::any::TypeId;
+use std::cell::RefCell;
 use std::fmt::Debug;
+use std::rc::Rc;
 
 pub trait ComponentProvider: Debug {
     type Props: Any;
 
-    fn run(props: &Self::Props) -> VNode;
+    fn run(context: (FiberId, &mut HookContext), props: &Self::Props) -> VNode;
 
     fn get_props<'a>(&'a self) -> &'a Self::Props;
 }
 
 pub trait AnyComponent: Debug {
-    fn run(&self) -> VNode;
+    fn run(&self, context: (FiberId, &mut HookContext)) -> VNode;
 
     fn get_type(&self) -> TypeId;
 }
 
 impl<T: Any + ComponentProvider> AnyComponent for T {
-    fn run(&self) -> VNode {
-        T::run(self.get_props())
+    fn run(&self, context: (FiberId, &mut HookContext)) -> VNode {
+        context.1.counter = 0;
+        T::run(context, self.get_props())
     }
 
     fn get_type(&self) -> TypeId {
