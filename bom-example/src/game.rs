@@ -3,6 +3,7 @@ use crate::board::BoardProps;
 use bom::callback;
 use bom::children;
 use bom::component;
+use bom::hook;
 use bom::use_state;
 use bom::ElementBuilder;
 use bom::EventType::OnClick;
@@ -58,8 +59,14 @@ fn calculate_winner(squares: &[Option<SquareValue>]) -> Option<SquareValue> {
     None
 }
 
-fn test() {
-    //let ff = use_state(33);
+#[hook]
+fn use_test() {
+    let ff = use_state(33);
+}
+
+#[hook]
+fn use_test2(ciao: u32) {
+    let ff = use_state(ciao);
 }
 
 #[component(Game)]
@@ -70,11 +77,9 @@ pub fn game() -> VNode {
         x_is_next: true,
     });
 
-    if 4 == 3 {
-        //let g = use_state(4);
+    let g = use_test2(4);
 
-        let cc = test();
-    }
+    let cc = use_test();
 
     let current = game_state.value.squares_history[game_state.value.step_index];
 

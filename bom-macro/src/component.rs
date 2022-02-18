@@ -1,4 +1,4 @@
-use crate::component_body::BodyRewriter;
+use crate::hook::BodyRewriter;
 use proc_macro2::Span;
 use proc_macro2::TokenStream;
 use quote::{quote, quote_spanned, ToTokens};
@@ -194,7 +194,7 @@ pub(crate) fn component_impl(
         impl ::bom::ComponentProvider for #component_name {
             type Props = #props_type;
 
-            fn run(#ctx_ident: (::bom::FiberId, &mut ::bom::HookContext), #arg) -> #ret_type {
+            fn run(#ctx_ident: &mut (::bom::FiberId, &mut ::bom::HookContext), #arg) -> #ret_type {
                 #block
             }
 

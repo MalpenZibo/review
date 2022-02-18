@@ -1,10 +1,12 @@
 use crate::component::component_impl;
 use crate::component::Component;
 use crate::component::ComponentName;
+use crate::hook::hook_impl;
+use crate::hook::HookFn;
 use syn::parse_macro_input;
 
 mod component;
-mod component_body;
+mod hook;
 
 #[proc_macro_attribute]
 pub fn component(
@@ -19,7 +21,21 @@ pub fn component(
         .into()
 }
 
-#[proc_macro]
-pub fn make_answer(_item: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    "fn answer() -> u32 { 42 }".parse().unwrap()
+#[proc_macro_error::proc_macro_error]
+#[proc_macro_attribute]
+pub fn hook(
+    attr: proc_macro::TokenStream,
+    item: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
+    let item = parse_macro_input!(item as HookFn);
+
+    if let Some(m) = proc_macro2::TokenStream::from(attr).into_iter().next() {
+        return syn::Error::new_spanned(m, "hook attribute does not accept any arguments")
+            .into_compile_error()
+            .into();
+    }
+
+    hook_impl(item)
+        .unwrap_or_else(|err| err.to_compile_error())
+        .into()
 }

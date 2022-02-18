@@ -24,7 +24,7 @@ impl<T, S: Fn(T) -> ()> State<T, S> {
 
 pub fn use_state<T: Any + Debug>(
     initial_value: T,
-    (fiber_id, hook_context): (FiberId, &mut HookContext),
+    (fiber_id, hook_context): &mut (FiberId, &mut HookContext),
 ) -> Rc<State<T, impl Fn(T)>> {
     let (fiber_target_id, hook): (FiberId, Rc<RefCell<dyn Any>>) = {
         let hook_position = hook_context.counter;
@@ -40,7 +40,7 @@ pub fn use_state<T: Any + Debug>(
             .expect("Retrieving hook error. Remember hook cannot be called conditionally")
             .clone();
 
-        (fiber_id, cur_value)
+        (*fiber_id, cur_value)
     };
 
     let update_hook = hook.clone();
@@ -86,7 +86,7 @@ mod tests {
             counter: 0,
         };
 
-        let state = use_state(7, (0, &mut context));
+        let state = use_state(7, &mut (0, &mut context));
 
         assert_eq!(state.value, Rc::new(7));
 
@@ -94,7 +94,7 @@ mod tests {
 
         context.counter = 0;
 
-        let state = use_state(7, (0, &mut context));
+        let state = use_state(7, &mut (0, &mut context));
 
         assert_eq!(state.value, Rc::new(9));
     }
@@ -112,9 +112,9 @@ mod tests {
             counter: 0,
         };
 
-        let int_state = use_state(7, (0, &mut context));
-        let string_state = use_state("test".to_owned(), (0, &mut context));
-        let struct_state = use_state(Test { i: 9, f: 3.4 }, (0, &mut context));
+        let int_state = use_state(7, &mut (0, &mut context));
+        let string_state = use_state("test".to_owned(), &mut (0, &mut context));
+        let struct_state = use_state(Test { i: 9, f: 3.4 }, &mut (0, &mut context));
 
         assert_eq!(int_state.value, Rc::new(7));
         assert_eq!(string_state.value, Rc::new("test".to_owned()));
@@ -126,9 +126,9 @@ mod tests {
 
         context.counter = 0;
 
-        let int_state = use_state(7, (0, &mut context));
-        let string_state = use_state("test".to_owned(), (0, &mut context));
-        let struct_state = use_state(Test { i: 9, f: 3.4 }, (0, &mut context));
+        let int_state = use_state(7, &mut (0, &mut context));
+        let string_state = use_state("test".to_owned(), &mut (0, &mut context));
+        let struct_state = use_state(Test { i: 9, f: 3.4 }, &mut (0, &mut context));
 
         assert_eq!(int_state.value, Rc::new(9));
         assert_eq!(string_state.value, Rc::new("test 2".to_owned()));

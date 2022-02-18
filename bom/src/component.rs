@@ -10,19 +10,19 @@ use std::rc::Rc;
 pub trait ComponentProvider: Debug {
     type Props: Any;
 
-    fn run(context: (FiberId, &mut HookContext), props: &Self::Props) -> VNode;
+    fn run(context: &mut (FiberId, &mut HookContext), props: &Self::Props) -> VNode;
 
     fn get_props<'a>(&'a self) -> &'a Self::Props;
 }
 
 pub trait AnyComponent: Debug {
-    fn run(&self, context: (FiberId, &mut HookContext)) -> VNode;
+    fn run(&self, context: &mut (FiberId, &mut HookContext)) -> VNode;
 
     fn get_type(&self) -> TypeId;
 }
 
 impl<T: Any + ComponentProvider> AnyComponent for T {
-    fn run(&self, context: (FiberId, &mut HookContext)) -> VNode {
+    fn run(&self, context: &mut (FiberId, &mut HookContext)) -> VNode {
         context.1.counter = 0;
         T::run(context, self.get_props())
     }
