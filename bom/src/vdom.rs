@@ -1,6 +1,5 @@
 use crate::node::{Component, Element, Node, Text};
 use crate::{AnyComponent, EventType, HookContext, Tag};
-use std::array::IntoIter;
 use std::collections::HashMap;
 use std::iter::FromIterator;
 use wasm_bindgen::JsValue;
@@ -192,10 +191,7 @@ impl ElementBuilder for Tag {
     fn with_attribute(self, key: &str, value: &str) -> VElement {
         VElement {
             tag: self,
-            attributes: HashMap::<String, String>::from_iter(IntoIter::new([(
-                key.to_owned(),
-                value.to_owned(),
-            )])),
+            attributes: HashMap::<String, String>::from([(key.to_owned(), value.to_owned())]),
             events: Events(HashMap::with_capacity(0)),
             children: Vec::with_capacity(0),
         }
@@ -241,9 +237,7 @@ impl ElementBuilder for Tag {
         VElement {
             tag: self,
             attributes: HashMap::with_capacity(0),
-            events: Events(HashMap::<EventType, Event>::from_iter(IntoIter::new([(
-                event, callback,
-            )]))),
+            events: Events(HashMap::<EventType, Event>::from([(event, callback)])),
             children: Vec::with_capacity(0),
         }
     }

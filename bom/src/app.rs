@@ -11,7 +11,6 @@ use wasm_bindgen::closure::Closure;
 #[derive(Debug)]
 pub(crate) struct App {
     pub fiber_tree: FiberTree,
-    pub root: FiberId,
     pub wip_root: Option<FiberId>,
     pub next_unit_of_work: Option<FiberId>,
     pub document: Option<web_sys::Document>,
@@ -40,7 +39,6 @@ pub fn render(element: VNode, container: &str) {
         }));
         app.replace(Some(App {
             fiber_tree,
-            root: root_id,
             next_unit_of_work: Some(root_id),
             wip_root: Some(root_id),
             document: Some(web_sys::window().unwrap().document().unwrap()),

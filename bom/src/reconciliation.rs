@@ -345,7 +345,6 @@ mod tests {
         }));
         App {
             fiber_tree,
-            root: root_id,
             next_unit_of_work: Some(root_id),
             wip_root: Some(root_id),
             document: None,
@@ -360,7 +359,7 @@ mod tests {
         commit_work(app, || true);
     }
 
-    fn compare_vdom_with_dom(vdom: VNode, app: &mut App) {
+    fn compare_vdom_with_dom(vdom: VNode, app: &mut App, root: FiberId) {
         println!("vdom: {:?}", vdom);
         let mut vnode_buffer = vec![VNode::Element(VElement {
             tag: Tag::Empty,
@@ -368,7 +367,7 @@ mod tests {
             events: Events(HashMap::with_capacity(0)),
             children: vec![vdom],
         })];
-        let mut node_buffer = vec![app.root];
+        let mut node_buffer = vec![root];
         while !(node_buffer.is_empty()) {
             if let Some(node_id) = node_buffer.pop() {
                 let mut next = app.fiber_tree.get(node_id).and_then(|node| node.child);
@@ -426,9 +425,9 @@ mod tests {
         }
     }
 
-    fn print_tree(app: &App) {
+    fn print_tree(app: &App, root: FiberId) {
         println!("print tree: ");
-        let mut next = Some(app.root);
+        let mut next = Some(root);
         let mut deep = 0;
         while let Some(current) = next {
             for _ in 0..deep {
@@ -465,11 +464,11 @@ mod tests {
         println!();
     }
 
-    fn manually_generate_working_context(app: &mut App, vdom: VNode) {
-        app.wip_root = Some(app.root);
-        app.next_unit_of_work = Some(app.root);
+    fn manually_generate_working_context(app: &mut App, vdom: VNode, root: FiberId) {
+        app.wip_root = Some(root);
+        app.next_unit_of_work = Some(root);
         app.fiber_tree
-            .get_mut(app.root)
+            .get_mut(root)
             .map(|node| match &mut node.node {
                 Node::Element(Element {
                     unprocessed_children,
@@ -485,11 +484,12 @@ mod tests {
     fn simple_vdom_creation() {
         let vdom = || Div.with_child("hello world").into();
         let mut app = create_app(vdom());
+        let root = app.wip_root.unwrap_or(0);
 
         work_on_dom(&mut app);
         commit(&mut app);
 
-        compare_vdom_with_dom(vdom(), &mut app);
+        compare_vdom_with_dom(vdom(), &mut app, root);
     }
 
     #[test]
@@ -501,33 +501,35 @@ mod tests {
                 .into()
         };
         let mut app = create_app(vdom());
+        let root = app.wip_root.unwrap_or(0);
 
         work_on_dom(&mut app);
         commit(&mut app);
 
-        print_tree(&app);
+        print_tree(&app, root);
 
-        compare_vdom_with_dom(vdom(), &mut app);
+        compare_vdom_with_dom(vdom(), &mut app, root);
     }
 
     #[test]
     fn change_text() {
         let vdom = || "hello world".into();
         let mut app = create_app(vdom());
+        let root = app.wip_root.unwrap_or(0);
 
         work_on_dom(&mut app);
         commit(&mut app);
 
-        compare_vdom_with_dom(vdom(), &mut app);
+        compare_vdom_with_dom(vdom(), &mut app, root);
 
         let vdom = || "hello world 2".into();
 
-        manually_generate_working_context(&mut app, vdom());
+        manually_generate_working_context(&mut app, vdom(), root);
 
         work_on_dom(&mut app);
         commit(&mut app);
 
-        compare_vdom_with_dom(vdom(), &mut app);
+        compare_vdom_with_dom(vdom(), &mut app, root);
     }
 
     #[test]
@@ -538,19 +540,20 @@ mod tests {
                 .into()
         };
         let mut app = create_app(vdom());
+        let root = app.wip_root.unwrap_or(0);
 
         work_on_dom(&mut app);
         commit(&mut app);
 
-        compare_vdom_with_dom(vdom(), &mut app);
+        compare_vdom_with_dom(vdom(), &mut app, root);
 
         let vdom = || Div.with_attribute("id", "foo").with_child(A).into();
-        manually_generate_working_context(&mut app, vdom());
+        manually_generate_working_context(&mut app, vdom(), root);
 
         work_on_dom(&mut app);
         commit(&mut app);
 
-        compare_vdom_with_dom(vdom(), &mut app);
+        compare_vdom_with_dom(vdom(), &mut app, root);
     }
 
     #[test]
@@ -563,13 +566,14 @@ mod tests {
                 .into()
         };
         let mut app = create_app(vdom());
+        let root = app.wip_root.unwrap_or(0);
 
         work_on_dom(&mut app);
         commit(&mut app);
 
-        print_tree(&app);
+        print_tree(&app, root);
 
-        compare_vdom_with_dom(vdom(), &mut app);
+        compare_vdom_with_dom(vdom(), &mut app, root);
 
         let vdom = || {
             Div.with_child(Div)
@@ -579,15 +583,15 @@ mod tests {
                 .with_child(Div)
                 .into()
         };
-        manually_generate_working_context(&mut app, vdom());
+        manually_generate_working_context(&mut app, vdom(), root);
 
         work_on_dom(&mut app);
         commit(&mut app);
 
-        print_tree(&app);
+        print_tree(&app, root);
         println!("{:?}", vdom());
 
-        compare_vdom_with_dom(vdom(), &mut app);
+        compare_vdom_with_dom(vdom(), &mut app, root);
     }
 
     #[test]
@@ -600,23 +604,24 @@ mod tests {
                 .into()
         };
         let mut app = create_app(vdom());
+        let root = app.wip_root.unwrap_or(0);
 
         work_on_dom(&mut app);
         commit(&mut app);
 
-        print_tree(&app);
+        print_tree(&app, root);
 
-        compare_vdom_with_dom(vdom(), &mut app);
+        compare_vdom_with_dom(vdom(), &mut app, root);
 
         let vdom = || Div.with_child(Div).with_child(Div).into();
-        manually_generate_working_context(&mut app, vdom());
+        manually_generate_working_context(&mut app, vdom(), root);
 
         work_on_dom(&mut app);
         commit(&mut app);
 
-        print_tree(&app);
+        print_tree(&app, root);
 
-        compare_vdom_with_dom(vdom(), &mut app);
+        compare_vdom_with_dom(vdom(), &mut app, root);
     }
 
     #[derive(PartialEq, Debug)]
