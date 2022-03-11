@@ -7,15 +7,20 @@ use std::cell::RefCell;
 use std::fmt::Debug;
 use std::rc::Rc;
 
+type State<T> = (Rc<T>, Rc<dyn Fn(T)>);
+
 pub struct UseStateBuilder<T> {
     initial_value: T,
 }
 
-impl<T: Any> HookBuilder<(Rc<T>, Rc<dyn Fn(T)>)> for UseStateBuilder<T> {
-    fn build(
-        self,
-        (fiber_id, hook_context): &mut (FiberId, &mut HookContext),
-    ) -> (Rc<T>, Rc<dyn Fn(T)>) {
+pub fn use_state<T: Any + Debug>(initial_value: T) -> UseStateBuilder<T> {
+    UseStateBuilder {
+        initial_value: initial_value,
+    }
+}
+
+impl<T: Any> HookBuilder<State<T>> for UseStateBuilder<T> {
+    fn build(self, (fiber_id, hook_context): &mut (FiberId, &mut HookContext)) -> State<T> {
         let (fiber_target_id, hook): (FiberId, Rc<RefCell<dyn Any>>) = {
             let hook_position = hook_context.counter;
             hook_context.counter += 1;
@@ -53,12 +58,6 @@ impl<T: Any> HookBuilder<(Rc<T>, Rc<dyn Fn(T)>)> for UseStateBuilder<T> {
             .downcast_ref::<Rc<T>>()
             .expect("Incompatible hook type. Hooks must always be called in the same order");
         (Rc::clone(hook), Rc::new(updater))
-    }
-}
-
-pub fn use_state<T: Any + Debug>(initial_value: T) -> UseStateBuilder<T> {
-    UseStateBuilder {
-        initial_value: initial_value,
     }
 }
 
