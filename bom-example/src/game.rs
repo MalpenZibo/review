@@ -50,16 +50,15 @@ fn calculate_winner(squares: &[Option<SquareValue>]) -> Option<SquareValue> {
 
 #[component(Game)]
 pub fn game() -> VNode {
-    let game_state = use_state(GameState {
+    let (game_state, set_game_state) = use_state(GameState {
         squares_history: vec![[None; 9]],
         step_index: 0,
         x_is_next: true,
     });
 
-    let current = game_state.value.squares_history[game_state.value.step_index];
+    let current = game_state.squares_history[game_state.step_index];
 
     let moves: Vec<VNode> = game_state
-        .value
         .squares_history
         .iter()
         .enumerate()
@@ -71,8 +70,9 @@ pub fn game() -> VNode {
             };
             Li.with_child(Button.with_child(desc).with_event(OnClick, {
                 let game_state = game_state.clone();
-                callback!(move || game_state.set(GameState {
-                    squares_history: game_state.value.squares_history.clone(),
+                let set_game_state = set_game_state.clone();
+                callback!(move || set_game_state(GameState {
+                    squares_history: game_state.squares_history.clone(),
                     step_index: i,
                     x_is_next: i % 2 == 0
                 }))
@@ -86,7 +86,7 @@ pub fn game() -> VNode {
         _ => if current.iter().any(|s| s.is_none()) {
             format!(
                 "Next player: {}",
-                if game_state.value.x_is_next {
+                if game_state.x_is_next {
                     SquareValue::X
                 } else {
                     SquareValue::O
@@ -104,20 +104,19 @@ pub fn game() -> VNode {
             let mut new_square = current;
             if calculate_winner(&new_square).is_none() {
                 if let Some(square @ None) = new_square.get_mut(index) {
-                    *square = Some(if game_state.value.x_is_next {
+                    *square = Some(if game_state.x_is_next {
                         SquareValue::X
                     } else {
                         SquareValue::O
                     });
 
-                    let mut new_history = game_state.value.squares_history
-                        [0..game_state.value.step_index + 1]
-                        .to_vec();
+                    let mut new_history =
+                        game_state.squares_history[0..game_state.step_index + 1].to_vec();
                     new_history.push(new_square);
-                    game_state.set(GameState {
+                    set_game_state(GameState {
                         squares_history: new_history,
-                        step_index: game_state.value.step_index + 1,
-                        x_is_next: !game_state.value.x_is_next,
+                        step_index: game_state.step_index + 1,
+                        x_is_next: !game_state.x_is_next,
                     });
                 }
             }
