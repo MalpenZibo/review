@@ -14,9 +14,7 @@ pub struct UseStateBuilder<T> {
 }
 
 pub fn use_state<T: Any + Debug>(initial_value: T) -> UseStateBuilder<T> {
-    UseStateBuilder {
-        initial_value: initial_value,
-    }
+    UseStateBuilder { initial_value }
 }
 
 impl<T: Any> HookBuilder<State<T>> for UseStateBuilder<T> {
