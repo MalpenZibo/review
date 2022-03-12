@@ -31,14 +31,13 @@ and in the end you could create your first component using BOM.
 ```rust
 #[component(App)]
 pub fn app() -> VNode {
-    let state = use_state(0);
+    let (state, set_state) = use_state(0);
 
     Div.with_children(children!(
-        format!("Current value {}", state.value),
-        Button.with_child("Increase counter").with_event(OnClick, {
-            let state = state.clone();
-            callback!(move || { state.set(*state.value + 1) })
-        })
+        format!("Current value {}", state),
+        Button
+            .with_child("Increase counter")
+            .with_event(OnClick, callback!(move || { set_state(*state + 1) }))
     ))
     .into()
 }
