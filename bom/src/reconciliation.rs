@@ -1,4 +1,5 @@
 use crate::fiber::{EffectTag, FiberId, FiberNode, FiberTree, UpdateData};
+//use crate::hooks::run_effects;
 use crate::node::{Component, Element, Node, Text};
 use crate::VElement;
 use crate::VNode;
@@ -54,6 +55,7 @@ fn update_component_node(id: FiberId, fiber_tree: &mut FiberTree) {
             };
 
         let elements = vec![function.run(&mut (id, hook_context))];
+        //run_effects(hook_context);
         reconcile_children(id, elements, fiber_tree);
     }
 }

@@ -1,5 +1,6 @@
 use crate::app::APP;
 use crate::fiber::FiberId;
+use crate::Hook;
 use crate::HookBuilder;
 use crate::HookContext;
 use std::any::Any;
@@ -17,30 +18,38 @@ pub fn use_state<T: Any + Debug>(initial_value: T) -> UseStateBuilder<T> {
     UseStateBuilder { initial_value }
 }
 
-impl<T: Any> HookBuilder<State<T>> for UseStateBuilder<T> {
+type StateHook<T> = Rc<RefCell<Rc<T>>>;
+
+impl<T: Any + Debug> Hook for StateHook<T> {
+    fn pre_render(&mut self) {}
+
+    fn post_render(&mut self) {}
+}
+
+impl<T: Any + Debug> HookBuilder<State<T>> for UseStateBuilder<T> {
     fn build(self, (fiber_id, hook_context): &mut (FiberId, &mut HookContext)) -> State<T> {
-        let (fiber_target_id, hook): (FiberId, Rc<RefCell<dyn Any>>) = {
+        let (fiber_target_id, hook): (FiberId, &StateHook<T>) = {
             let hook_position = hook_context.counter;
             hook_context.counter += 1;
-            if hook_position >= hook_context.hooks_state.len() {
-                let initial_value = Rc::new(RefCell::new(Rc::new(self.initial_value)));
-                hook_context.hooks_state.push(initial_value);
+            if hook_position >= hook_context.hooks.len() {
+                let initial_value = StateHook::new(RefCell::new(Rc::new(self.initial_value)));
+                hook_context.hooks.push(Box::new(initial_value));
             }
             let cur_value = hook_context
-                .hooks_state
+                .hooks
                 .get(hook_position)
-                .expect("Retrieving hook error. Remember hook cannot be called conditionally")
-                .clone();
-            (*fiber_id, cur_value)
+                .expect("Retrieving hook error. Remember hook cannot be called conditionally");
+            (
+                *fiber_id,
+                cur_value.downcast_ref::<StateHook<T>>().expect(
+                    "Incompatible hook type. Hooks must always be called in the same order",
+                ),
+            )
         };
         let update_hook = hook.clone();
         let updater = move |new_value: T| {
             {
-                let mut hook = update_hook.borrow_mut();
-                let hook: &mut Rc<T> = hook.downcast_mut::<Rc<T>>().expect(
-                    "Incompatible hook type. Hooks must always be called in the same order",
-                );
-                *hook = Rc::new(new_value);
+                update_hook.replace(Rc::new(new_value));
             }
             APP.with(|app| {
                 if let Ok(mut app) = app.try_borrow_mut() {
@@ -52,10 +61,7 @@ impl<T: Any> HookBuilder<State<T>> for UseStateBuilder<T> {
             });
         };
         let hook = hook.borrow();
-        let hook: &Rc<T> = hook
-            .downcast_ref::<Rc<T>>()
-            .expect("Incompatible hook type. Hooks must always be called in the same order");
-        (Rc::clone(hook), Rc::new(updater))
+        (hook.clone(), Rc::new(updater))
     }
 }
 
@@ -65,10 +71,7 @@ mod tests {
 
     #[test]
     fn single_state() {
-        let mut context = HookContext {
-            hooks_state: Vec::default(),
-            counter: 0,
-        };
+        let mut context = HookContext::default();
 
         {
             let hook_context = &mut (0, &mut context);
@@ -96,10 +99,7 @@ mod tests {
 
     #[test]
     fn multiple_state() {
-        let mut context = HookContext {
-            hooks_state: Vec::default(),
-            counter: 0,
-        };
+        let mut context = HookContext::default();
 
         {
             let hook_context = &mut (0, &mut context);
