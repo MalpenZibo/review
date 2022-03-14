@@ -1,5 +1,4 @@
 use crate::fiber::FiberId;
-use std::any::Any;
 use std::fmt::Debug;
 
 mod use_effect;
@@ -20,8 +19,6 @@ pub trait HookBuilder<T> {
 }
 
 pub trait Hook: Downcast + Debug {
-    fn pre_render(&mut self);
-
     fn post_render(&mut self);
 }
 impl_downcast!(Hook);

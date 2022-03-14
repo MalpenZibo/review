@@ -21,8 +21,6 @@ pub fn use_state<T: Any + Debug>(initial_value: T) -> UseStateBuilder<T> {
 type StateHook<T> = Rc<RefCell<Rc<T>>>;
 
 impl<T: Any + Debug> Hook for StateHook<T> {
-    fn pre_render(&mut self) {}
-
     fn post_render(&mut self) {}
 }
 

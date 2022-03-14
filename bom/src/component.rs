@@ -21,9 +21,6 @@ pub trait AnyComponent: Debug {
 
 impl<T: Any + ComponentProvider> AnyComponent for T {
     fn run(&self, context: &mut (FiberId, &mut HookContext)) -> VNode {
-        for h in context.1.hooks.iter_mut() {
-            h.pre_render();
-        }
         context.1.counter = 0;
         let node = T::run(context, self.get_props());
 

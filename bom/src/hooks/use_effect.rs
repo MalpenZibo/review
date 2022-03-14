@@ -23,7 +23,6 @@ pub fn use_effect<E: Fn() -> Option<C> + 'static, C: Fn() + 'static, D: Any + Pa
 
 struct EffectHook<E: Fn() -> Option<C>, C: Fn(), D: PartialEq> {
     effect: E,
-    last_cleanup: Option<C>,
     current_dependencies: Option<D>,
     last_dependencies: Option<D>,
 }
@@ -39,18 +38,14 @@ impl<E: Fn() -> Option<C> + 'static, C: Fn() + 'static, D: Any + PartialEq> Debu
 impl<E: Fn() -> Option<C> + 'static, C: Fn() + 'static, D: Any + PartialEq> Hook
     for EffectHook<E, C, D>
 {
-    fn pre_render(&mut self) {
-        let last_cleanup = self.last_cleanup.take();
-        if let Some(last_cleanup) = last_cleanup {
-            last_cleanup();
-        }
-    }
-
     fn post_render(&mut self) {
         if self.current_dependencies.is_none()
             || self.current_dependencies != self.last_dependencies
         {
-            self.last_cleanup = (self.effect)();
+            let cleanup = (self.effect)();
+            if let Some(cleanup) = cleanup {
+                cleanup();
+            }
             self.last_dependencies = self.current_dependencies.take();
         }
     }
@@ -64,8 +59,7 @@ impl<E: Fn() -> Option<C> + 'static, C: Fn() + 'static, D: Any + PartialEq> Hook
         hook_context.counter += 1;
         if hook_position >= hook_context.hooks.len() {
             let initial_value = EffectHook {
-                effect: Box::new(self.effect),
-                last_cleanup: None,
+                effect: self.effect,
                 current_dependencies: self.dependencies,
                 last_dependencies: None,
             };
@@ -80,6 +74,7 @@ impl<E: Fn() -> Option<C> + 'static, C: Fn() + 'static, D: Any + PartialEq> Hook
                 .downcast_mut::<EffectHook<E, C, D>>()
                 .expect("Incompatible hook type. Hooks must always be called in the same order");
 
+            hook.effect = self.effect;
             hook.current_dependencies = self.dependencies;
         }
     }
