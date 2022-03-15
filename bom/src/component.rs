@@ -8,21 +8,21 @@ use std::fmt::Debug;
 pub trait ComponentProvider: Debug {
     type Props: Any;
 
-    fn run(context: &mut (FiberId, &mut HookContext), props: &Self::Props) -> VNode;
+    fn render(context: &mut (FiberId, &mut HookContext), props: &Self::Props) -> VNode;
 
     fn get_props(&self) -> &Self::Props;
 }
 
 pub trait AnyComponent: Debug {
-    fn run(&self, context: &mut (FiberId, &mut HookContext)) -> VNode;
+    fn render(&self, context: &mut (FiberId, &mut HookContext)) -> VNode;
 
     fn get_type(&self) -> TypeId;
 }
 
 impl<T: Any + ComponentProvider> AnyComponent for T {
-    fn run(&self, context: &mut (FiberId, &mut HookContext)) -> VNode {
+    fn render(&self, context: &mut (FiberId, &mut HookContext)) -> VNode {
         context.1.counter = 0;
-        let node = T::run(context, self.get_props());
+        let node = T::render(context, self.get_props());
 
         for h in context.1.hooks.iter_mut() {
             h.post_render();

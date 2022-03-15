@@ -193,7 +193,7 @@ pub(crate) fn component_impl(
         impl ::bom::ComponentProvider for #component_name {
             type Props = #props_type;
 
-            fn run(#ctx_ident: &mut (::bom::FiberId, &mut ::bom::HookContext), #arg) -> #ret_type {
+            fn render(#ctx_ident: &mut (::bom::FiberId, &mut ::bom::HookContext), #arg) -> #ret_type {
                 #block
             }
 

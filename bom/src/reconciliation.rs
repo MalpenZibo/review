@@ -54,8 +54,7 @@ fn update_component_node(id: FiberId, fiber_tree: &mut FiberTree) {
                 old_function
             };
 
-        let elements = vec![function.run(&mut (id, hook_context))];
-        //run_effects(hook_context);
+        let elements = vec![function.render(&mut (id, hook_context))];
         reconcile_children(id, elements, fiber_tree);
     }
 }
@@ -414,7 +413,7 @@ mod tests {
                                 ..
                             })),
                         ) => {
-                            vnode_buffer.push(component.run(&mut (node_id, hook_context)));
+                            vnode_buffer.push(component.render(&mut (node_id, hook_context)));
                         }
                         _ => {
                             panic!("Different node");
