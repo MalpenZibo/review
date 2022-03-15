@@ -14,6 +14,15 @@ pub struct HookContext {
     pub counter: usize,
 }
 
+impl HookContext {
+    fn get_mut_hook<T: Hook>(&mut self, hook_position: usize) -> &mut T {
+        self.hooks
+            .get_mut(hook_position)
+            .and_then(|hook| hook.downcast_mut::<T>())
+            .expect("Hook retrieval error")
+    }
+}
+
 pub trait HookBuilder<T> {
     fn build(self, context: &mut (FiberId, &mut HookContext)) -> T;
 }

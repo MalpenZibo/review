@@ -33,16 +33,8 @@ impl<T: Any + Debug> HookBuilder<State<T>> for UseStateBuilder<T> {
                 let initial_value = StateHook::new(RefCell::new(Rc::new(self.initial_value)));
                 hook_context.hooks.push(Box::new(initial_value));
             }
-            let cur_value = hook_context
-                .hooks
-                .get(hook_position)
-                .expect("Retrieving hook error. Remember hook cannot be called conditionally");
-            (
-                *fiber_id,
-                cur_value.downcast_ref::<StateHook<T>>().expect(
-                    "Incompatible hook type. Hooks must always be called in the same order",
-                ),
-            )
+
+            (*fiber_id, hook_context.get_mut_hook(hook_position))
         };
         let update_hook = hook.clone();
         let updater = move |new_value: T| {

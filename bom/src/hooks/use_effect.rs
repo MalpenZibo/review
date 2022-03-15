@@ -65,14 +65,7 @@ impl<E: Fn() -> Option<C> + 'static, C: Fn() + 'static, D: Any + PartialEq> Hook
             };
             hook_context.hooks.push(Box::new(initial_value));
         } else {
-            let cur_value = hook_context
-                .hooks
-                .get_mut(hook_position)
-                .expect("Retrieving hook error. Remember hook cannot be called conditionally");
-
-            let hook = cur_value
-                .downcast_mut::<EffectHook<E, C, D>>()
-                .expect("Incompatible hook type. Hooks must always be called in the same order");
+            let hook: &mut EffectHook<E, C, D> = hook_context.get_mut_hook(hook_position);
 
             hook.effect = self.effect;
             hook.current_dependencies = self.dependencies;
