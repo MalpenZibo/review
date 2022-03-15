@@ -74,7 +74,7 @@ pub fn hook_impl(component: HookFn) -> syn::Result<TokenStream> {
     };
 
     let output = quote! {
-        #vis #fn_token #ident #generics ( #prev_inputs #ctx_ident: &mut (::bom::FiberId, &mut ::bom::HookContext)) #hook_return_type #where_clause #block
+        #vis #fn_token #ident #generics ( #prev_inputs #ctx_ident: &mut (::review::FiberId, &mut ::review::HookContext)) #hook_return_type #where_clause #block
     };
 
     Ok(output)

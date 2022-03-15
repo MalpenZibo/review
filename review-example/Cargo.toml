@@ -1,9 +1,10 @@
 [package]
-name = "tictactoe-bom"
+name = "tictactoe-review"
 version = "0.1.0"
 categories = ["wasm"]
 readme = "README.md"
 edition = "2021"
+license = "MIT"
 
 [lib]
 crate-type = ["cdylib"]
@@ -17,7 +18,7 @@ default = [
 ]
 
 [dependencies]
-bom = { path = "../bom" }
+review = { path = "../review" }
 
 # The `wasm-bindgen` crate provides the bare minimum functionality needed
 # to interact with JavaScript.

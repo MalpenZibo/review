@@ -332,8 +332,8 @@ mod tests {
     use crate::VNode;
     use std::collections::HashMap;
 
-    use crate as bom;
-    use bom::*;
+    use crate as review;
+    use review::*;
 
     fn create_app(dom: VNode) -> App {
         let mut fiber_tree = FiberTree::default();

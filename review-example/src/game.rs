@@ -1,7 +1,7 @@
 use crate::board::{Board, BoardProps};
-use bom::EventType::OnClick;
-use bom::Tag::{Button, Div, Li, Ol};
-use bom::{callback, children, component, use_state, ElementBuilder, VNode};
+use review::EventType::OnClick;
+use review::Tag::{Button, Div, Li, Ol};
+use review::{callback, children, component, use_state, ElementBuilder, VNode};
 use std::fmt::Display;
 use std::rc::Rc;
 

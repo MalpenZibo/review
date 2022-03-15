@@ -21,9 +21,9 @@ pub fn main_js() -> Result<(), JsValue> {
     #[cfg(feature = "console_error_panic_hook")]
     console_error_panic_hook::set_once();
 
-    bom::init_logger();
+    review::init_logger();
 
-    bom::render(Game(()).into(), "root");
+    review::render(Game(()).into(), "root");
 
     Ok(())
 }

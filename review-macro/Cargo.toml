@@ -1,7 +1,10 @@
 [package]
-name = "bom-macro"
+name = "review-macro"
 version = "0.1.0"
+description = "A React-inspired framework for making client-side single-page apps"
+repository = "https://github.com/MalpenZibo/review"
 edition = "2021"
+license = "MIT"
 
 [lib]
 proc-macro = true

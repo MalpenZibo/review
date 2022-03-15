@@ -1,9 +1,9 @@
 use crate::game::SquareValue;
-use bom::callback;
-use bom::component;
-use bom::ElementBuilder;
-use bom::EventType::OnClick;
-use bom::Tag::Button;
+use review::callback;
+use review::component;
+use review::ElementBuilder;
+use review::EventType::OnClick;
+use review::Tag::Button;
 use std::rc::Rc;
 
 pub struct SquareProps {

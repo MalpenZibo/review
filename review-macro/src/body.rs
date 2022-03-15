@@ -1,11 +1,11 @@
 use proc_macro2::Span;
 use proc_macro_error::emit_error;
 use std::sync::{Arc, Mutex};
-use syn::visit_mut::VisitMut;
 use syn::spanned::Spanned;
+use syn::visit_mut::VisitMut;
 use syn::{
-    visit_mut, Expr, ExprCall, ExprClosure, ExprForLoop, ExprIf, ExprLoop, ExprMatch,
-    ExprWhile, Ident, Item, parse_quote_spanned,
+    parse_quote_spanned, visit_mut, Expr, ExprCall, ExprClosure, ExprForLoop, ExprIf, ExprLoop,
+    ExprMatch, ExprWhile, Ident, Item,
 };
 
 #[derive(Debug, Default)]
@@ -43,7 +43,7 @@ impl VisitMut for BodyRewriter {
                             help = "move hooks to the top-level of your function.";
                         );
                     } else {
-                        *i = parse_quote_spanned! { i.span() => ::bom::HookBuilder::build(#i, #ctx_ident) };
+                        *i = parse_quote_spanned! { i.span() => ::review::HookBuilder::build(#i, #ctx_ident) };
                         //i.args.push(parse_quote!(#ctx_ident));
                     }
 

@@ -56,7 +56,7 @@ impl Parse for Component {
                     ReturnType::Default => {
                         return Err(syn::Error::new_spanned(
                             sig,
-                            "function components must return `bom::VNode`",
+                            "function components must return `review::VNode`",
                         ))
                     }
                     ReturnType::Type(_, ty) => ty,
@@ -170,7 +170,7 @@ pub(crate) fn component_impl(
         ));
     }
 
-    let ret_type = quote_spanned!(return_type.span()=> ::bom::VNode);
+    let ret_type = quote_spanned!(return_type.span()=> ::review::VNode);
     let debug_name = format!("{:?}", component_name);
 
     let ctx_ident = Ident::new("context", Span::mixed_site());
@@ -190,10 +190,10 @@ pub(crate) fn component_impl(
             }
         }
 
-        impl ::bom::ComponentProvider for #component_name {
+        impl ::review::ComponentProvider for #component_name {
             type Props = #props_type;
 
-            fn render(#ctx_ident: &mut (::bom::FiberId, &mut ::bom::HookContext), #arg) -> #ret_type {
+            fn render(#ctx_ident: &mut (::review::FiberId, &mut ::review::HookContext), #arg) -> #ret_type {
                 #block
             }
 

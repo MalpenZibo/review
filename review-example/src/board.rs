@@ -1,10 +1,10 @@
 use crate::game::SquareValue;
 use crate::square::Square;
 use crate::square::SquareProps;
-use bom::children;
-use bom::component;
-use bom::ElementBuilder;
-use bom::Tag::Div;
+use review::children;
+use review::component;
+use review::ElementBuilder;
+use review::Tag::Div;
 use std::rc::Rc;
 
 pub struct BoardProps {

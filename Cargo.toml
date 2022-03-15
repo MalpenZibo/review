@@ -1,8 +1,8 @@
 [workspace]
 members = [
-    "bom",
-    "bom-macro",
-    "bom-example",
+    "review",
+    "review-macro",
+    "review-example",
 ]
 
 [profile.release]
