@@ -6,28 +6,41 @@ reView is a React-inspired library for didactic purposes written in Rust.
 This project is inspired by a series of posts that explains how to build a React clone from scratch (https://github.com/pomber/didact). I liked the idea, so I tried to create a similar project using Rust.
 In the process, I take inspiration for the component macro and the hook functionality from Yew (https://github.com/yewstack/yew).
 
-## How it works
-You could see the `review-example`. 
+## Setup Environment
 
-To create a project see: https://github.com/rustwasm/rust-webpack-template 
-Then you could simply add review as a local dependecy
+If you don't already have it installed, it's time to install Rust: <https://www.rust-lang.org/tools/install>.
+The rest of this guide assumes a typical Rust installation which contains both `rustup` and Cargo.
 
-```toml
-[dependencies]
-review = { path = "../review" }
+To compile Rust to WASM, we need to have the `wasm32-unknown-unknown` target installed.
+If you don't already have it, install it with the following command:
+
+```bash
+rustup target add wasm32-unknown-unknown
 ```
 
-add a root div inside the `static/index.html`  files
-```html
-<body>
-  <div id="root"></div>
-  <script src="index.js"></script>
-</body>
+Now that it's time to install: [Trunk](https://trunkrs.dev/).
+
+Simply run the following command to install it:
+
+```bash
+cargo install trunk wasm-bindgen-cli
 ```
 
-and in the end you could create your first component using reView.
+## Start a new project
 
-##### `lib.rs`
+To create a project new project you cloud use the standard template with cargo generate
+
+Install [cargo-generate](https://github.com/cargo-generate/cargo-generate) by following their installation instructions then run the following command:
+
+```bash
+cargo generate --git https://github.com/malpenzibo/review-template
+```
+
+That's it!! You're ready to go!!
+
+## Simple counter
+Now you can create your first application. Inside the project remove all the style from `index.scss`. Then open the `app.rs` file and change the app function with the following code:
+
 ```rust
 #[component(App)]
 pub fn app() -> VNode {
@@ -41,25 +54,13 @@ pub fn app() -> VNode {
     ))
     .into()
 }
-
-#[wasm_bindgen(start)]
-pub fn main_js() -> Result<(), JsValue> {
-    #[cfg(feature = "console_error_panic_hook")]
-    console_error_panic_hook::set_once();
-
-    review::init_logger();
-
-    review::render(App(()).into(), "root");
-
-    Ok(())
-}
 ```
 
 That's it, a simple button that increments a counter :D
 
-### reView Example
+## reView Example
 I implemented a simple Tic Tac Toe game like in the standard React tutorial https://reactjs.org/tutorial/tutorial.html
 
 Play `reView Tic Tac Toe` here: https://malpenzibo.github.io/review/
 
-![Tic Tac Toe](https://raw.githubusercontent.com/MalpenZibo/review/main/docs/tic%20tac%20toe.gif)
+![Tic Tac Toe](https://raw.githubusercontent.com/MalpenZibo/review/main/docs/tictactoe.gif)
