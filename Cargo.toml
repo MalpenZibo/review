@@ -2,7 +2,7 @@
 members = [
     "review",
     "review-macro",
-    "review-example",
+    "examples/tictactoe",
 ]
 
 [profile.release]

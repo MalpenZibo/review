@@ -1,6 +1,6 @@
 use crate::board::{Board, BoardProps};
 use review::EventType::OnClick;
-use review::Tag::{Button, Div, Li, Ol};
+use review::Tag::{Button, Div, Li, Ul};
 use review::{callback, children, component, use_state, ElementBuilder, VNode};
 use std::fmt::Display;
 use std::rc::Rc;
@@ -132,7 +132,7 @@ pub fn game() -> VNode {
                 }
             })),
             Div.with_attribute("class", "game-info")
-                .with_children(children!(Div.with_child(status), Ol.with_children(moves)))
+                .with_children(children!(Div.with_child(status), Ul.with_children(moves)))
         ))
         .into()
 }

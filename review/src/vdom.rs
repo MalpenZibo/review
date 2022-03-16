@@ -243,34 +243,36 @@ impl ElementBuilder for Tag {
 #[macro_export]
 macro_rules! callback {
     (|| $body:expr) => {
-        ::std::boxed::Box::new(::wasm_bindgen::closure::Closure::wrap(
-            ::std::boxed::Box::new(|| $body) as ::std::boxed::Box<dyn Fn()>,
+        ::std::boxed::Box::new(::review::Closure::wrap(
+            ::std::boxed::Box::new(|| $body) as ::std::boxed::Box<dyn Fn()>
         ));
     };
     (move || $body:expr) => {
-        ::std::boxed::Box::new(::wasm_bindgen::closure::Closure::wrap(
+        ::std::boxed::Box::new(::review::Closure::wrap(
             ::std::boxed::Box::new(move || $body) as ::std::boxed::Box<dyn Fn()>,
         ));
     };
     (|$args:ident| $body:expr) => {
-        ::std::boxed::Box::new(::wasm_bindgen::closure::Closure::wrap(
+        ::std::boxed::Box::new(::review::Closure::wrap(
             ::std::boxed::Box::new(|$args| $body) as ::std::boxed::Box<dyn Fn(_)>,
         ));
     };
     (move |$args:ident| $body:expr) => {
-        ::std::boxed::Box::new(::wasm_bindgen::closure::Closure::wrap(
+        ::std::boxed::Box::new(::review::Closure::wrap(
             ::std::boxed::Box::new(move |$args| $body) as ::std::boxed::Box<dyn Fn(_)>,
         ));
     };
     (|$args:ident : $args_type:ty | $body:expr) => {
-        ::std::boxed::Box::new(::wasm_bindgen::closure::Closure::wrap(
-            ::std::boxed::Box::new(|$args: $args_type| $body) as ::std::boxed::Box<dyn Fn(_)>,
-        ));
+        ::std::boxed::Box::new(::review::Closure::wrap(::std::boxed::Box::new(
+            |$args: $args_type| $body,
+        )
+            as ::std::boxed::Box<dyn Fn(_)>));
     };
     (move |$args:ident : $args_type:ty| $body:expr) => {
-        ::std::boxed::Box::new(::wasm_bindgen::closure::Closure::wrap(
-            ::std::boxed::Box::new(move |$args: $args_type| $body) as ::std::boxed::Box<dyn Fn(_)>,
-        ));
+        ::std::boxed::Box::new(::review::Closure::wrap(::std::boxed::Box::new(
+            move |$args: $args_type| $body,
+        )
+            as ::std::boxed::Box<dyn Fn(_)>));
     };
 }
 

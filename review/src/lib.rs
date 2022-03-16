@@ -21,5 +21,7 @@ pub use vdom::*;
 
 pub use log;
 
+pub use wasm_bindgen::closure::Closure;
+
 extern crate review_macro;
 pub use review_macro::*;
