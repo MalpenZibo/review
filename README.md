@@ -1,7 +1,7 @@
-# ReView
+# reView
 
 ## About
-ReView is a React-inspired library for didactic purposes written in Rust.
+reView is a React-inspired library for didactic purposes written in Rust.
 
 This project is inspired by a series of posts that explains how to build a React clone from scratch (https://github.com/pomber/didact). I liked the idea, so I tried to create a similar project using Rust.
 In the process, I take inspiration for the component macro and the hook functionality from Yew (https://github.com/yewstack/yew).
@@ -25,7 +25,7 @@ add a root div inside the `static/index.html`  files
 </body>
 ```
 
-and in the end you could create your first component using ReView.
+and in the end you could create your first component using reView.
 
 ##### `lib.rs`
 ```rust
@@ -57,9 +57,9 @@ pub fn main_js() -> Result<(), JsValue> {
 
 That's it, a simple button that increments a counter :D
 
-### ReView Example
+### reView Example
 I implemented a simple Tic Tac Toe game like in the standard React tutorial https://reactjs.org/tutorial/tutorial.html
 
-Play `ReView Tic Tac Toe` here: https://malpenzibo.github.io/review/
+Play `reView Tic Tac Toe` here: https://malpenzibo.github.io/review/
 
 ![Tic Tac Toe](https://raw.githubusercontent.com/MalpenZibo/review/main/docs/tic%20tac%20toe.gif)
