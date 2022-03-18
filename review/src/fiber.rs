@@ -4,6 +4,7 @@ use crate::AnyComponent;
 use crate::{Events, VNode};
 use std::collections::HashMap;
 
+#[doc(hidden)]
 pub type FiberId = usize;
 
 #[derive(Debug)]

@@ -1,3 +1,4 @@
+/// Rappresent all possible tag used in reView
 #[derive(strum_macros::AsRefStr, strum_macros::ToString, PartialEq, Clone, Debug)]
 #[strum(serialize_all = "lowercase")]
 pub enum Tag {

@@ -20,12 +20,18 @@ thread_local! {
     pub(crate) static APP: RefCell<Option<App>> = RefCell::new(None);
 }
 
-pub fn render(element: VNode, container: &str) {
+/// Starts a reView app mounted to the element with the specified id.
+///
+/// # Example
+/// ```rust
+/// review::render(Div.into(), "root");
+/// ```
+pub fn render(element: VNode, container_id: &str) {
     let root_dom = web_sys::window()
         .unwrap()
         .document()
         .unwrap()
-        .get_element_by_id(container)
+        .get_element_by_id(container_id)
         .expect("error during root container retrival");
 
     APP.with(|app| {

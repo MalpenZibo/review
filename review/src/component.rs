@@ -5,6 +5,7 @@ use std::any::Any;
 use std::any::TypeId;
 use std::fmt::Debug;
 
+#[doc(hidden)]
 pub trait ComponentProvider: Debug {
     type Props: Any;
 
@@ -13,6 +14,7 @@ pub trait ComponentProvider: Debug {
     fn get_props(&self) -> &Self::Props;
 }
 
+#[doc(hidden)]
 pub trait AnyComponent: Debug {
     fn render(&self, context: &mut (FiberId, &mut HookContext)) -> VNode;
 
