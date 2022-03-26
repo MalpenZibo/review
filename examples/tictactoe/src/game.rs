@@ -125,12 +125,11 @@ pub fn game() -> VNode {
 
     Div.with_attribute("class", "game")
         .with_children(children!(
-            Div.with_attribute("game", "game-board").with_child(Board({
-                BoardProps {
+            Div.with_attribute("game", "game-board")
+                .with_child(Board(BoardProps {
                     squares: current,
                     on_click: Rc::new(handle_click),
-                }
-            })),
+                })),
             Div.with_attribute("class", "game-info")
                 .with_children(children!(Div.with_child(status), Ul.with_children(moves)))
         ))

@@ -3,6 +3,7 @@ use crate::vdom::VElement;
 use crate::AnyComponent;
 use crate::{Events, VNode};
 use std::collections::HashMap;
+use std::rc::Rc;
 
 #[doc(hidden)]
 pub type FiberId = usize;
@@ -24,7 +25,7 @@ pub(crate) enum UpdateData {
         attributes: HashMap<String, String>,
         events: Events,
     },
-    Component(Box<dyn AnyComponent>),
+    Component(Rc<dyn AnyComponent>),
 }
 
 #[derive(Debug)]

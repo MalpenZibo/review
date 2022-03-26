@@ -2,10 +2,11 @@ use crate::node::{Component, Element, Node, Text};
 use crate::{AnyComponent, EventType, HookContext, Tag};
 use std::collections::HashMap;
 use std::iter::FromIterator;
+use std::rc::Rc;
 use wasm_bindgen::JsValue;
 
 /// A VElement is a particulat type of [VNode] generated from a [Tag]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct VElement {
     pub tag: Tag,
     pub attributes: HashMap<String, String>,
@@ -18,11 +19,11 @@ pub struct VElement {
 /// It could be a [VElement] obtained from a [Tag],
 /// a simple text node obtained from a [String]
 /// or a Component node obtained from a function component
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum VNode {
     Element(VElement),
     Text(String),
-    Component(Box<dyn AnyComponent>),
+    Component(Rc<dyn AnyComponent>),
 }
 
 impl std::cmp::PartialEq<VNode> for VNode {
@@ -81,10 +82,10 @@ impl VNode {
 }
 
 #[doc(hidden)]
-pub type Event = Box<dyn AsRef<JsValue>>;
+pub type Event = Rc<dyn AsRef<JsValue>>;
 
 #[doc(hidden)]
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Events(pub HashMap<EventType, Event>);
 impl std::fmt::Debug for Events {
     // Print out all of the event names for this VirtualNode
@@ -319,33 +320,32 @@ impl ElementBuilder for Tag {
 #[macro_export]
 macro_rules! callback {
     (|| $body:expr) => {
-        ::std::boxed::Box::new(::review::Closure::wrap(
+        ::std::rc::Rc::new(::review::Closure::wrap(
             ::std::boxed::Box::new(|| $body) as ::std::boxed::Box<dyn Fn()>
         ));
     };
     (move || $body:expr) => {
-        ::std::boxed::Box::new(::review::Closure::wrap(
+        ::std::rc::Rc::new(::review::Closure::wrap(
             ::std::boxed::Box::new(move || $body) as ::std::boxed::Box<dyn Fn()>,
         ));
     };
     (|$args:ident| $body:expr) => {
-        ::std::boxed::Box::new(::review::Closure::wrap(
+        ::std::rc::Rc::new(::review::Closure::wrap(
             ::std::boxed::Box::new(|$args| $body) as ::std::boxed::Box<dyn Fn(_)>,
         ));
     };
     (move |$args:ident| $body:expr) => {
-        ::std::boxed::Box::new(::review::Closure::wrap(
+        ::std::rc::Rc::new(::review::Closure::wrap(
             ::std::boxed::Box::new(move |$args| $body) as ::std::boxed::Box<dyn Fn(_)>,
         ));
     };
     (|$args:ident : $args_type:ty | $body:expr) => {
-        ::std::boxed::Box::new(::review::Closure::wrap(::std::boxed::Box::new(
-            |$args: $args_type| $body,
-        )
-            as ::std::boxed::Box<dyn Fn(_)>));
+        ::std::rc::Rc::new(::review::Closure::wrap(
+            ::std::boxed::Box::new(|$args: $args_type| $body) as ::std::boxed::Box<dyn Fn(_)>,
+        ));
     };
     (move |$args:ident : $args_type:ty| $body:expr) => {
-        ::std::boxed::Box::new(::review::Closure::wrap(::std::boxed::Box::new(
+        ::std::rc::Rc::new(::review::Closure::wrap(::std::boxed::Box::new(
             move |$args: $args_type| $body,
         )
             as ::std::boxed::Box<dyn Fn(_)>));

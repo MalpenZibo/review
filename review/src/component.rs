@@ -4,6 +4,7 @@ use crate::VNode;
 use std::any::Any;
 use std::any::TypeId;
 use std::fmt::Debug;
+use std::rc::Rc;
 
 #[doc(hidden)]
 pub trait ComponentProvider: Debug {
@@ -38,14 +39,14 @@ impl<T: Any + ComponentProvider> AnyComponent for T {
     }
 }
 
-impl std::cmp::PartialEq<Box<dyn AnyComponent>> for Box<dyn AnyComponent> {
-    fn eq(&self, other: &Box<dyn AnyComponent>) -> bool {
+impl std::cmp::PartialEq<dyn AnyComponent> for dyn AnyComponent {
+    fn eq(&self, other: &dyn AnyComponent) -> bool {
         self.get_type() == other.get_type()
     }
 }
 
 impl<T: Any + ComponentProvider> From<T> for VNode {
     fn from(v: T) -> VNode {
-        VNode::Component(Box::new(v))
+        VNode::Component(Rc::new(v))
     }
 }
