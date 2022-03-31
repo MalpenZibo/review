@@ -1,0 +1,490 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>reView Book</title>
+        <meta name="robots" content="noindex" />
+
+
+        <!-- Custom HTML head -->
+        
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="review.html">reView</a></li><li class="chapter-item expanded "><a href="get-started.html"><strong aria-hidden="true">1.</strong> Get Started</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="build-sample-app.html"><strong aria-hidden="true">1.1.</strong> Build a sample app</a></li></ol></li><li class="chapter-item expanded "><a href="concepts.html"><strong aria-hidden="true">2.</strong> Concepts</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="element-builder-api.html"><strong aria-hidden="true">2.1.</strong> Element Builder API</a></li><li class="chapter-item expanded "><a href="components.html"><strong aria-hidden="true">2.2.</strong> Components</a></li><li class="chapter-item expanded "><a href="hooks.html"><strong aria-hidden="true">2.3.</strong> Hooks</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="state-hook.html"><strong aria-hidden="true">2.3.1.</strong> State Hook</a></li><li class="chapter-item expanded "><a href="effect-hook.html"><strong aria-hidden="true">2.3.2.</strong> Effect Hook</a></li><li class="chapter-item expanded "><a href="custom-hook.html"><strong aria-hidden="true">2.3.3.</strong> Custom Hook</a></li></ol></li></ol></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">reView Book</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="review-book"><a class="header" href="#review-book">reView Book</a></h1>
+<p>Welcome to the <em>reView Book</em>, simple documentation about <em>reView</em>.</p>
+<h2 id="what-is-review"><a class="header" href="#what-is-review">What is reView?</a></h2>
+<p>reView is a library written in <a href="https://www.rust-lang.org/">Rust</a> for creating front-end web app using <a href="https://webassembly.org/">WebAssembly</a>.</p>
+<blockquote>
+<p>reView is not production-ready, and it's a WIP project so expect breaking changes between versions.</p>
+</blockquote>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="project-setup"><a class="header" href="#project-setup">Project Setup</a></h1>
+<h2 id="installing-rust"><a class="header" href="#installing-rust">Installing Rust</a></h2>
+<p>To install Rust, follow the <a href="https://www.rust-lang.org/tools/install">official instructions</a>.</p>
+<p>Rust can compile source codes for different &quot;targets&quot; (e.g. different processors). The compilation target for browser-based WebAssembly is called &quot;wasm32-unknown-unknown&quot;. The following command will add this target to your development environment.</p>
+<pre><code class="language-bash">rustup target add wasm32-unknown-unknown
+</code></pre>
+<h2 id="install-trunk"><a class="header" href="#install-trunk">Install Trunk</a></h2>
+<p>Trunk is a great tool for managing deployment and packaging, and will be the default choice for reView. It will be used in the documentation, in every example and in the default review-template.</p>
+<pre><code class="language-bash"># note that this might take a while to install, because it compiles everything from scratch
+# Trunk also provides prebuilt binaries for a number of major package managers
+# See https://trunkrs.dev/#install for further details
+cargo install trunk wasm-bindgen-cli
+</code></pre>
+<h2 id="summary"><a class="header" href="#summary">Summary</a></h2>
+<p>Now that you have all the tools needed, we can build a sample application.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="build-a-sample-app"><a class="header" href="#build-a-sample-app">Build a sample app</a></h1>
+<h2 id="create-a-project-using-the-default-template"><a class="header" href="#create-a-project-using-the-default-template">Create a project using the default template</a></h2>
+<p>To get started, if you haven't already done it, install <a href="https://github.com/cargo-generate/cargo-generate">cargo generate</a>.</p>
+<pre><code class="language-bash">cargo install cargo-generate
+</code></pre>
+<p>Now you run </p>
+<pre><code class="language-bash">cargo generate --git https://github.com/malpenzibo/review-template
+</code></pre>
+<p>go through the wizard specifing the project name and than enter in the new created folder and run</p>
+<pre><code class="language-bash">trunk serve
+</code></pre>
+<p>If everithing goes well you can see the result on <a href="http://localhost:8080">localhost:8080</a> </p>
+<h2 id="create-a-project-from-scratch"><a class="header" href="#create-a-project-from-scratch">Create a project from scratch</a></h2>
+<p>To get started, create a new project running </p>
+<pre><code class="language-bash">cargo new review-app
+</code></pre>
+<p>and open the newly created directory.</p>
+<pre><code class="language-bash">cd review-app
+</code></pre>
+<p>Now, update <code>Cargo.toml</code> adding <code>reView</code> as dependencies.</p>
+<pre><code class="language-toml">[package]
+name = &quot;review-app&quot;
+version = &quot;0.1.0&quot;
+edition = &quot;2021&quot;
+
+[dependencies]
+review = &quot;0.1.0&quot;
+</code></pre>
+<h3 id="update-mainrs"><a class="header" href="#update-mainrs">Update main.rs</a></h3>
+<p>We need to generate a component called <code>App</code> which renders a button that updates it's value when clicked. </p>
+<p>Replace the contents of <code>src/main.rs</code> with the following code.</p>
+<pre><code class="language-rust noplayground">use review::Tag::{Button, Div};
+use review::EventType::OnClick;
+use review::{callback, children, component, use_state, ElementBuilder};
+
+#[component(App)]
+pub fn app() -&gt; VNode {
+    let (state, set_state) = use_state(0);
+
+    Div.with_children(children!(
+        format!(&quot;Current value {}&quot;, state),
+        Button
+            .with_child(&quot;Increase counter&quot;)
+            .with_event(OnClick, callback!(move || { set_state(*state + 1) }))
+    ))
+    .into()
+}
+
+fn main() {
+    review::init_logger(review::log::Level::Debug);
+
+    review::render(App(()).into(), &quot;root&quot;);
+}
+</code></pre>
+<blockquote>
+<p>NOTE</p>
+<p>The line <code>review::init_logger(review::log::Level::Debug);</code> will initialize the log system with <code>Debug</code> severity as minimum level.</p>
+<p>The line <code>review::render(App(()).into(), &quot;root&quot;);</code> inside <code>main()</code> starts your application and mounts it inside the element with the &quot;root&quot; id.</p>
+</blockquote>
+<h3 id="create-indexhtml"><a class="header" href="#create-indexhtml">Create index.html</a></h3>
+<p>Finally, add an <code>index.html</code> file in the root directory of your app.</p>
+<pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+  &lt;head&gt;
+    &lt;meta charset=&quot;utf-8&quot; /&gt;
+    &lt;title&gt;reView App&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;div id=&quot;root&quot;&gt;&lt;/div&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h3 id="view-your-web-application"><a class="header" href="#view-your-web-application">View your web application</a></h3>
+<p>Run the following command to build and serve the application locally.</p>
+<p><code>trunk serve</code></p>
+<p>Trunk will helpfully rebuild your application if you modify any of its files.</p>
+<h3 id="congratulations"><a class="header" href="#congratulations">Congratulations</a></h3>
+<p>You have now successfully setup your reView development environment, and built your first web application and could see the result here <a href="http://localhost:8080">localhost:8080</a> </p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="concepts"><a class="header" href="#concepts">Concepts</a></h1>
+<p>reView is a simple library to create single page application. 
+The API itself is similar to the react API and for this reason some concepts like hooks and functional components are similar.</p>
+<p>To minimalize the DOM manipulation reView use a virtual DOM that is synchronized with the real DOM. 
+Every node in the virtual DOM is represented by a <code>VNode</code> that will be materialized in a real DOM element only when required.</p>
+<p>There is 3 kind of <code>VNode</code>:</p>
+<ul>
+<li>a <code>Element</code> that represent a standard DOM element and corresponds to a DOM node created with <a href="https://developer.mozilla.org/en-US/docs/Web/API/Document/createElement">createElement</a> (eg: <code>div</code>, <code>p</code>, <code>button</code>, etc...)</li>
+<li>a <code>Text</code> that represent a simple string displayed in the DOM and corresponds to a DOM node created with <a href="https://developer.mozilla.org/en-US/docs/Web/API/Document/createElement">createTextNode</a> </li>
+<li>a <code>Component</code> that is a main reView building block represented by a function that returns a <code>VNode</code></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="element-builder-api"><a class="header" href="#element-builder-api">Element Builder API</a></h1>
+<p>reView doesn't have a macro to support a syntax similar to jsx but instead provides an API to create the UI.</p>
+<p>The main concept is that every <code>Tag</code> and every <code>String</code> could become a <code>VNode</code>.</p>
+<p>For this reason both <code>Tag</code>, <code>String</code> and <code>VElement</code> implement the <code>From&lt;VNode&gt;</code> trait to obtain a <code>VNode</code> using <code>into()</code>.</p>
+<p>To attach attributes or children to a <code>Tag</code> element we could use a builder API.</p>
+<p>Every <code>Tag</code> or <code>VElement</code> implements the <code>ElementBuilder</code> trait so we can call:</p>
+<ul>
+<li><code>with_child</code> to attach a single child (the child should implement the <code>From&lt;VNode&gt;</code> trait)</li>
+<li><code>with_children</code> to attach a vector of child (every element should implement). reView provide a <code>children!</code> macro to simplify the creation of the child vector</li>
+<li><code>with_attribute</code> to attach an attribute specifing a<code>key</code> and a <code>value</code></li>
+<li><code>with_attributes</code> to attach a vector of attributes. A vector of attribute is a vector of tuple <code>(key, value)</code></li>
+<li><code>with_event</code> to attach an event specifing a <code>EventType</code> and an <code>Event</code>. reView provide a <code>callback!</code> macro to create an <code>Event</code> from a rust closure.</li>
+</ul>
+<p>Using this API we can create a customized <code>VElement</code> that could be converted into a <code>VNode</code> with <code>into()</code>.</p>
+<pre><code class="language-rust noplayground">Main.with_children(children!(
+    Img.with_attribute(&quot;class&quot;, &quot;logo&quot;)
+        .with_attributes(vec!(
+            (&quot;src&quot;, &quot;/assets/logo.png&quot;), 
+            (&quot;alt&quot;, &quot;reView logo&quot;)
+        ))
+        .with_event(OnClick, callback!(|| { log::info!(&quot;hello!!&quot;) }))
+    H1.with_child(&quot;Hello World!&quot;),
+    Span.with_attribute(&quot;class&quot;, &quot;subtitle&quot;)
+        .with_children(children!(
+            &quot;from reView with &quot;,
+            I.with_attribute(&quot;class&quot;, &quot;heart&quot;)
+        ))
+))
+.into()
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="components"><a class="header" href="#components">Components</a></h1>
+<p>A Component consist of a single function that receives props and determines what should be rendered by returning a <code>VNode</code>. 
+Without <code>hooks</code> a component is quite limiting because can only be a pure component. 
+<code>Hooks</code> allow components to maintain their own internal state and use other reView features.</p>
+<h2 id="creating-a-components"><a class="header" href="#creating-a-components">Creating a Components</a></h2>
+<p>A component can be created using the <code>#[component]</code> attribute on top of a function.</p>
+<pre><code class="language-rust noplayground">#[component(ExampleComponent)]
+pub fn example_component() -&gt; VNode {
+    Div.into()
+}
+</code></pre>
+<h2 id="under-the-hood"><a class="header" href="#under-the-hood">Under the hood</a></h2>
+<p>A functional component is a struct that implements the <code>ComponentProvider</code> trait. This trait has two methods, the <code>render</code> method and the <code>get_props</code> method.
+The first one is used to retrieve the <code>VNode</code> produced by the component and the second one il used to get a reference to the props that should be send to the <code>render</code> method.</p>
+<p>The <code>component</code> attribute will automatically create a struct that implement the <code>ComponentProvider</code> using the specified function. 
+Also checks that the fuction respect the hook rules.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="hooks"><a class="header" href="#hooks">Hooks</a></h1>
+<p>Hooks are functions that let you store state and perform side-effects.</p>
+<p>reView comes with a few pre-defined Hooks. You can also create your own custom hooks.</p>
+<h2 id="rules-of-hooks"><a class="header" href="#rules-of-hooks">Rules of hooks</a></h2>
+<ul>
+<li>A hook function name always has to start with use_</li>
+<li>Hooks can only be used at the following locations:
+<ul>
+<li>Top level of a function / hook.</li>
+<li>If condition inside a function / hook, given it's not already branched.</li>
+<li>Match condition inside a function / hook, given it's not already branched.</li>
+<li>Blocks inside a function / hook, given it's not already branched.</li>
+</ul>
+</li>
+<li>Every render must call the hooks in the same order</li>
+</ul>
+<p>All these rules are enforced by either compile time or run-time errors.</p>
+<h2 id="pre-defined-hooks"><a class="header" href="#pre-defined-hooks">Pre-defined Hooks</a></h2>
+<p>reView comes with the following predefined Hooks:</p>
+<ul>
+<li><a href="state-hook.html">use_state</a></li>
+<li><a href="effect-hook.html">use_effect</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="state-hook"><a class="header" href="#state-hook">State Hook</a></h1>
+<p><code>use_state</code> is used to manage state in a component. 
+It returns a <code>State&lt;T&gt;</code> that is a tuple with the first element that is a <code>Rc&lt;T&gt;</code> with the current stored values and as second element an <code>Rc&lt;Fn(T)&gt;</code>  to change the current stored values.</p>
+<p>The hook takes a value as input which determines the initial value.</p>
+<h2 id="example"><a class="header" href="#example">Example</a></h2>
+<pre><code class="language-rust noplayground">#[component(StateExample)]
+fn state_example() -&gt; VNode {
+    let (state, set_state) = use_state(0);
+
+    Div.with_children(children!(
+        format!(&quot;Current value {}&quot;, state),
+        Button
+            .with_child(&quot;Increase counter&quot;)
+            .with_event(OnClick, callback!(move || { set_state(*state + 1) }))
+    ))
+    .into()
+}
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="effect-hook"><a class="header" href="#effect-hook">Effect Hook</a></h1>
+<p><code>use_effect</code> is used for hooking into the component's lifecycle and creating side-effects.</p>
+<p>It takes a function which is called every time after the component's render has finished.</p>
+<p>This function returns an Optional closure that will be called after the execution of the effect. 
+This optional closure is a cleanup function and it's usefull if is necessary to perform some cleanups after the execution of the effect.</p>
+<p>The <code>use_effect</code> hooks accept, as second optional argument, the effect dependencies. 
+Only when the dependencies change, it calls the provided function.</p>
+<blockquote>
+<p>Note</p>
+<p><code>dependencies</code> must implement <code>PartialEq</code></p>
+</blockquote>
+<h2 id="examples"><a class="header" href="#examples">Examples</a></h2>
+<h3 id="without-cleanup-and-dependencies"><a class="header" href="#without-cleanup-and-dependencies">Without cleanup and dependencies</a></h3>
+<pre><code class="language-rust noplayground">#[component(StateExample)]
+fn state_example() -&gt; VNode {
+    let (state, set_state) = use_state(0);
+
+    use_effect(
+        || {
+            review::log::info!(&quot;hello world!!&quot;);
+            None::&lt;fn()&gt;
+        },
+        None::&lt;()&gt;,
+    );
+
+    Div.with_children(children!(
+        format!(&quot;Current value {}&quot;, state),
+        Button
+            .with_child(&quot;Increase counter&quot;)
+            .with_event(OnClick, callback!(move || { set_state(*state + 1) }))
+    ))
+    .into()
+}
+</code></pre>
+<h3 id="with-dependencies-and-without-cleanup"><a class="header" href="#with-dependencies-and-without-cleanup">With dependencies and without cleanup</a></h3>
+<pre><code class="language-rust noplayground">#[component(StateExample)]
+fn state_example() -&gt; VNode {
+    let (state, set_state) = use_state(0);
+
+    use_effect(
+        || {
+            review::log::info!(&quot;hello world!!&quot;);
+            None::&lt;fn()&gt;
+        },
+        Some(*state),
+    );
+
+    Div.with_children(children!(
+        format!(&quot;Current value {}&quot;, state),
+        Button
+            .with_child(&quot;Increase counter&quot;)
+            .with_event(OnClick, callback!(move || { set_state(*state + 1) }))
+    ))
+    .into()
+}
+</code></pre>
+<h3 id="with-dependencies-and-cleanup"><a class="header" href="#with-dependencies-and-cleanup">With dependencies and cleanup</a></h3>
+<pre><code class="language-rust noplayground">#[component(StateExample)]
+fn state_example() -&gt; VNode {
+    let (state, set_state) = use_state(0);
+
+    use_effect(
+        || {
+            log::info!(&quot;hello world!!&quot;);
+            Some(|| log::info!(&quot;cleanup&quot;))
+        },
+        Some(*state),
+    );
+
+    Div.with_children(children!(
+        format!(&quot;Current value {}&quot;, state),
+        Button
+            .with_child(&quot;Increase counter&quot;)
+            .with_event(OnClick, callback!(move || { set_state(*state + 1) }))
+    ))
+    .into()
+}
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="custom-hook"><a class="header" href="#custom-hook">Custom Hook</a></h1>
+<p>It's possible to define custom Hooks using multiple standard hook inside a single function.</p>
+<p>For example if we want to log every state change we could create a custom hook like this:</p>
+<pre><code class="language-rust noplayground">#[hook]
+pub fn use_traced_state&lt;T&gt;(init_value: T) -&gt; State&lt;T&gt;
+where
+    T: Any + PartialEq + Debug + Display,
+{
+    let (state, set_state) = use_state(init_value);
+
+    use_effect(
+        {
+            let state = state.clone();
+            move || {
+                log::info!(&quot;{}&quot;, state);
+                None::&lt;fn()&gt;
+            }
+        },
+        Some(state.clone()),
+    );
+
+    (state, set_state)
+}
+</code></pre>
+<p>In order to use the default hooks and become a custom hook a function should have the <code>hook</code> attribute.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+
+            </nav>
+
+        </div>
+
+
+
+
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+
+        <script type="text/javascript">
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+
+    </body>
+</html>
