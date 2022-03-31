@@ -66,4 +66,4 @@ I implemented a simple Tic Tac Toe game like in the standard React tutorial http
 
 Play `reView Tic Tac Toe` here: https://malpenzibo.github.io/review/
 
-![Tic Tac Toe](https://raw.githubusercontent.com/MalpenZibo/review/main/docs/tictactoe.gif)
+![Tic Tac Toe](https://raw.githubusercontent.com/MalpenZibo/review/gh-pages/tictactoe/tictactoe.gif)
