@@ -1,3 +1,4 @@
+/// Rappresent all possible js events used in reView
 #[derive(strum_macros::AsRefStr, Debug, Hash, Eq, PartialEq, Copy, Clone)]
 pub enum EventType {
     #[strum(serialize = "abort")]

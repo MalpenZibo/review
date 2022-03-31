@@ -6,8 +6,9 @@ mod use_state;
 
 use downcast_rs::{impl_downcast, Downcast};
 pub use use_effect::use_effect;
-pub use use_state::use_state;
+pub use use_state::{use_state, State};
 
+#[doc(hidden)]
 #[derive(Debug, Default)]
 pub struct HookContext {
     pub hooks: Vec<Box<dyn Hook>>,
@@ -23,10 +24,12 @@ impl HookContext {
     }
 }
 
+#[doc(hidden)]
 pub trait HookBuilder<T> {
     fn build(self, context: &mut (FiberId, &mut HookContext)) -> T;
 }
 
+#[doc(hidden)]
 pub trait Hook: Downcast + Debug {
     fn post_render(&mut self);
 }

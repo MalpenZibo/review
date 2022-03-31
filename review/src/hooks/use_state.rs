@@ -8,12 +8,37 @@ use std::cell::RefCell;
 use std::fmt::Debug;
 use std::rc::Rc;
 
-type State<T> = (Rc<T>, Rc<dyn Fn(T)>);
+/// The type returned from a [use_state] hook
+pub type State<T> = (Rc<T>, Rc<dyn Fn(T)>);
 
 pub struct UseStateBuilder<T> {
     initial_value: T,
 }
 
+/// This hook is used to manage the state in a component.
+///
+/// Returns a [State<T>]
+///
+/// # Example
+/// ```rust
+/// #[component(Example)]
+/// pub fn example() -> VNode {
+///     let (counter, set_counter) = use_state(0);
+///     let on_click = {
+///         let counter = counter.clone();
+///         let set_counter = set_counter.clone();
+///         move || {
+///             set_counter(*counter + 1);
+///         }
+///     };
+///     Div.with_children(children!(
+///         Button
+///             .with_event(OnClick, callback!(move || on_click()))
+///             .with_child("Increment value"),
+///         P.with_child(format!("Current value {}", counter))
+///     )).into()
+/// }
+/// ```
 pub fn use_state<T: Any + Debug>(initial_value: T) -> UseStateBuilder<T> {
     UseStateBuilder { initial_value }
 }

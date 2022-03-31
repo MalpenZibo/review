@@ -2,9 +2,11 @@ use crate::node::{Component, Element, Node, Text};
 use crate::{AnyComponent, EventType, HookContext, Tag};
 use std::collections::HashMap;
 use std::iter::FromIterator;
+use std::rc::Rc;
 use wasm_bindgen::JsValue;
 
-#[derive(Debug, PartialEq)]
+/// A VElement is a particulat type of [VNode] generated from a [Tag]
+#[derive(Debug, PartialEq, Clone)]
 pub struct VElement {
     pub tag: Tag,
     pub attributes: HashMap<String, String>,
@@ -12,11 +14,16 @@ pub struct VElement {
     pub children: Vec<VNode>,
 }
 
-#[derive(Debug)]
+/// A VNode rappresent a node in the VirtualDOM tree.
+///
+/// It could be a [VElement] obtained from a [Tag],
+/// a simple text node obtained from a [String]
+/// or a Component node obtained from a function component
+#[derive(Debug, Clone)]
 pub enum VNode {
     Element(VElement),
     Text(String),
-    Component(Box<dyn AnyComponent>),
+    Component(Rc<dyn AnyComponent>),
 }
 
 impl std::cmp::PartialEq<VNode> for VNode {
@@ -74,9 +81,11 @@ impl VNode {
     }
 }
 
-pub type Event = Box<dyn AsRef<JsValue>>;
+#[doc(hidden)]
+pub type Event = Rc<dyn AsRef<JsValue>>;
 
-#[derive(Default)]
+#[doc(hidden)]
+#[derive(Default, Clone)]
 pub struct Events(pub HashMap<EventType, Event>);
 impl std::fmt::Debug for Events {
     // Print out all of the event names for this VirtualNode
@@ -135,15 +144,77 @@ impl From<VElement> for VNode {
     }
 }
 
+/// This is the API to declare [VNode] in reView
+///
+/// reView doesn't implement any macro to mimic JSX syntax (too much effort to develop, test, and maintain such macro)
+///
+/// Instead it define a fluent API to declare [VNode] from a [Tag] or a [VElement].
+/// Then the obtained [VElement] can be converted in a [VNode] calling into()
+/// # Example
+/// ```rust
+/// Main.with_children(children!(
+///  Img.with_attribute("class", "logo")
+///         .with_attribute("src", "/assets/logo.png")
+///         .with_attribute("alt", "reView logo"),
+///      H1.with_child("Hello World!"),
+///      Span.with_attribute("class", "subtitle")
+///          .with_children(children!(
+///              "from reView with ",
+///              I.with_attribute("class", "heart")
+///          ))
+///      ))
+///      .into()
+///```
 pub trait ElementBuilder {
+    /// This function is used to append a child that implements [Into<VNode>] to a [Tag] or a [VElement] and return a [VElement]
+    ///
+    /// # Example
+    /// ```rust
+    /// let mut velement = Div.with_child(Button);
+    /// velement.with_child(Span.with_child("hello!!"));
+    /// ```
     fn with_child<T: Into<VNode>>(self, child: T) -> VElement;
 
+    /// This function is used to append a list of children [VNode] to a [Tag] or a [VElement] and return a [VElement]
+    ///
+    /// # Example
+    /// ```rust
+    /// let velement = Div.with_children(vec!(Button.into(), Div.into(), A.into()));
+    /// ```
+    /// or to avoid the `.into()` calls
+    /// # Example
+    /// ```rust
+    /// let velement = Div.with_children(children!(Button, Div, A));
+    /// ```
     fn with_children(self, children: Vec<VNode>) -> VElement;
 
+    /// This function is used to append an attribute to a [Tag] or a [VElement] and return a [VElement]
+    ///
+    /// # Example
+    /// ```rust
+    /// let mut velement = A.with_attribute("href", "https://malpenzibo.github.io/review/");
+    /// velement.with_attribute("target", "_blank");
+    /// ```
     fn with_attribute(self, key: &str, value: &str) -> VElement;
 
+    /// This function is used to append a list of attributes to a [Tag] or a [VElement] and return a [VElement]
+    ///
+    /// # Example
+    /// ```rust
+    /// let velement = Div.with_attributes(vec!(
+    ///     ("href", "https://malpenzibo.github.io/review/"),
+    ///     ("target", "_blank")
+    /// ));
+    /// ```
     fn with_attributes(self, attributes: Vec<(&str, &str)>) -> VElement;
 
+    /// This function is used to append an event to a [Tag] or a [VElement] and return a [VElement]
+    ///
+    /// # Example
+    /// ```rust
+    /// let mut velement = Div.with_event(OnClick, callback!(move || log::info!("hello!!")));
+    /// velement.with_event(OnMouseEnter, callback!(move || log::info!("mouseEnter!!")));
+    /// ```
     fn with_event(self, event: EventType, callback: Event) -> VElement;
 }
 
@@ -240,49 +311,53 @@ impl ElementBuilder for Tag {
     }
 }
 
+/// This macro is used to declare event for a [Tag] element using the [ElementBuilder] API
+///
+/// # Example
+/// ```rust
+/// Button.with_event(OnClick, callback!(move || log::info!("hello from js on click event")))
+/// ```
 #[macro_export]
 macro_rules! callback {
     (|| $body:expr) => {
-        ::std::boxed::Box::new(::review::Closure::wrap(
+        ::std::rc::Rc::new(::review::Closure::wrap(
             ::std::boxed::Box::new(|| $body) as ::std::boxed::Box<dyn Fn()>
         ));
     };
     (move || $body:expr) => {
-        ::std::boxed::Box::new(::review::Closure::wrap(
+        ::std::rc::Rc::new(::review::Closure::wrap(
             ::std::boxed::Box::new(move || $body) as ::std::boxed::Box<dyn Fn()>,
         ));
     };
     (|$args:ident| $body:expr) => {
-        ::std::boxed::Box::new(::review::Closure::wrap(
+        ::std::rc::Rc::new(::review::Closure::wrap(
             ::std::boxed::Box::new(|$args| $body) as ::std::boxed::Box<dyn Fn(_)>,
         ));
     };
     (move |$args:ident| $body:expr) => {
-        ::std::boxed::Box::new(::review::Closure::wrap(
+        ::std::rc::Rc::new(::review::Closure::wrap(
             ::std::boxed::Box::new(move |$args| $body) as ::std::boxed::Box<dyn Fn(_)>,
         ));
     };
     (|$args:ident : $args_type:ty | $body:expr) => {
-        ::std::boxed::Box::new(::review::Closure::wrap(::std::boxed::Box::new(
-            |$args: $args_type| $body,
-        )
-            as ::std::boxed::Box<dyn Fn(_)>));
+        ::std::rc::Rc::new(::review::Closure::wrap(
+            ::std::boxed::Box::new(|$args: $args_type| $body) as ::std::boxed::Box<dyn Fn(_)>,
+        ));
     };
     (move |$args:ident : $args_type:ty| $body:expr) => {
-        ::std::boxed::Box::new(::review::Closure::wrap(::std::boxed::Box::new(
+        ::std::rc::Rc::new(::review::Closure::wrap(::std::boxed::Box::new(
             move |$args: $args_type| $body,
         )
             as ::std::boxed::Box<dyn Fn(_)>));
     };
 }
 
-#[macro_export]
-macro_rules! attributes {
-    ( $( ($key:expr, $value:expr) ),* ) => {
-        vec!($( ($key, &format!("{}", $value)) ),*)
-    };
-}
-
+/// This macro helps to declare children for a [Tag] element using the [ElementBuilder] API
+///
+/// # Example
+/// ```rust
+/// Div.with_children(children!("test", Div.with_child("test2")))
+/// ```
 #[macro_export]
 macro_rules! children {
     ( $( $child:expr ),* ) => {
@@ -295,7 +370,7 @@ mod tests {
 
     use super::*;
     use crate::Events;
-    use crate::Tag::Div;
+    use crate::Tag::*;
     use crate::VElement;
     use crate::VNode;
     use std::collections::HashMap;
@@ -356,7 +431,7 @@ mod tests {
     #[test]
     fn create_complex_vdom() {
         let vdom: VNode = Div
-            .with_attributes(attributes!(("test", 5), ("test2", "7")))
+            .with_attributes(vec![("test", "5"), ("test2", "7")])
             .with_children(children!("test", Div.with_child("test2")))
             .into();
 

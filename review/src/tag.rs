@@ -1,4 +1,5 @@
-#[derive(strum_macros::AsRefStr, strum_macros::ToString, PartialEq, Clone, Debug)]
+/// Rappresent all possible tag used in reView
+#[derive(strum_macros::AsRefStr, strum_macros::ToString, PartialEq, Clone, Copy, Debug)]
 #[strum(serialize_all = "lowercase")]
 pub enum Tag {
     Empty,

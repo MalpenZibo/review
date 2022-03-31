@@ -12,9 +12,6 @@ license = "MIT"
 [lib]
 crate-type = ["cdylib", "rlib"]
 
-[features]
-default = ["console_log", "log-panics"]
-
 [dependencies]
 review-macro = { path = "../review-macro", version = "0.1.0" }
 
@@ -22,16 +19,11 @@ wasm-bindgen = "0.2.78"
 
 strum = "0.20"
 strum_macros = "0.20"
-
-log = "0.4"
-console_log = { version = "0.2", features = ["color"], optional = true }
-log-panics = { version = "2.0.0", optional = true }
 downcast-rs = "1.2.0"
 
-# `wee_alloc` is a tiny allocator for wasm that is only ~1K in code size
-# compared to the default allocator's ~10K. However, it is slower than the default
-# allocator, so it's not enabled by default.
-wee_alloc = { version = "0.4.2", optional = true }
+log = "0.4"
+console_log = { version = "0.2", features = ["color"] }
+log-panics = { version = "2.0.0" }
 
 # The `web-sys` crate allows you to interact with the various browser APIs,
 # like the DOM.

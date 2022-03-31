@@ -1,5 +1,5 @@
 use crate::{AnyComponent, Events, HookContext, Tag, VNode};
-use std::collections::HashMap;
+use std::{collections::HashMap, rc::Rc};
 use wasm_bindgen::JsCast;
 
 #[derive(Debug)]
@@ -99,7 +99,7 @@ impl Text {
 #[derive(Debug)]
 pub(crate) struct Component {
     pub hook_context: HookContext,
-    pub function: Box<dyn AnyComponent>,
+    pub function: Rc<dyn AnyComponent>,
 }
 
 #[derive(Debug)]

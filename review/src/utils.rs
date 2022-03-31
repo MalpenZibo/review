@@ -1,13 +1,11 @@
 use wasm_bindgen::closure::Closure;
 use wasm_bindgen::JsCast;
 
-pub fn init_logger() {
-    if cfg!(feature = "console_log") {
-        use log::Level;
-        console_log::init_with_level(Level::Trace).expect("error initializing log");
-        if cfg!(feature = "log-panics") {
-            log_panics::init();
-        }
+/// Initialize the logger with the specified minimum log [log::Level]
+pub fn init_logger(level: log::Level) {
+    console_log::init_with_level(level).expect("error initializing log");
+    if cfg!(feature = "log-panics") {
+        log_panics::init();
     }
 }
 

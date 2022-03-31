@@ -11,6 +11,57 @@ pub struct UseEffectBuilder<E, D: PartialEq> {
     dependencies: Option<D>,
 }
 
+/// The Effect Hook lets you perform side effects in components
+///
+/// # Examples
+///
+/// Without cleanup function and without dependencies
+/// ```rust
+/// #[component(Example)]
+/// pub fn example() -> VNode {
+///     use_effect(
+///         || {
+///             log::info!("hello!");
+///             None::<fn()>
+///         },
+///         None::<()>
+///     );
+///
+///     Div.into()
+/// }
+/// ```
+///
+/// With cleanup function and without dependencies
+/// ```rust
+/// #[component(Example)]
+/// pub fn example() -> VNode {
+///     use_effect(
+///         || {
+///             log::info!("hello!");
+///             Some(|| log::info!("clean"))
+///         },
+///         None::<()>
+///     );
+///
+///     Div.into()
+/// }
+/// ```
+///
+/// With cleanup function and dependencies
+/// ```rust
+/// #[component(Example)]
+/// pub fn example() -> VNode {
+///     use_effect(
+///         || {
+///             review::log::info!("hello!");
+///             Some(|| log::info!("clean"))
+///         },
+///         Some(()) // run only one time because () never change
+///     );
+///
+///     Div.into()
+/// }
+/// ```
 pub fn use_effect<E: Fn() -> Option<C> + 'static, C: Fn() + 'static, D: Any + PartialEq>(
     effect: E,
     dependencies: Option<D>,
