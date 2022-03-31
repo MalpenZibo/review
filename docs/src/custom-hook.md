@@ -28,5 +28,3 @@ where
 ```
 
 In order to use the default hooks and become a custom hook a function should have the `hook` attribute.
-
-This attribute enforce the hook rules at compile time and require that the function name start with `use_`.
