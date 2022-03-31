@@ -5,6 +5,8 @@
 //! - Features a fluent API for declaring interactive HTML with Rust expressions.
 //! - Use a VirtualDOM to minimize DOM API calls for each page render.
 //!
+//! > reView is not production-ready, and it's a WIP project so expect breaking changes between versions.
+//!
 //! ### Supported Targets (Client-Side Rendering)
 //! - `wasm32-unknown-unknown`
 //!

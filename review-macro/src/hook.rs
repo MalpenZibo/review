@@ -60,7 +60,7 @@ pub fn hook_impl(component: HookFn) -> syn::Result<TokenStream> {
         ..
     } = sig;
 
-    let (where_clause, ..) = generics.split_for_impl();
+    let (_, _, where_clause) = generics.split_for_impl();
 
     let ctx_ident = Ident::new("context", Span::mixed_site());
 

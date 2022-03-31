@@ -4,7 +4,7 @@
 
 - [Get Started](get-started.md)
   - [Build a sample app](build-sample-app.md)
-  - [Example](example.md)
+
 
 - [Concepts](concepts.md)
   - [Element Builder API](element-builder-api.md)
