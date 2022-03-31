@@ -9,6 +9,12 @@ In the process, I take inspiration for the component macro and the hook function
 
 > reView is not production-ready, and it's a WIP project so expect breaking changes between versions.
 
+## Documentations
+
+Read the [**reView Book**](https://malpenzibo.github.io/review)
+
+Read the [**reView Docs**](https://docs.rs/review/latest/review/)
+
 ## Setup Environment
 
 If you don't already have it installed, it's time to install Rust: <https://www.rust-lang.org/tools/install>.
@@ -64,6 +70,6 @@ That's it, a simple button that increments a counter :D
 ## reView Example
 I implemented a simple Tic Tac Toe game like in the standard React tutorial https://reactjs.org/tutorial/tutorial.html
 
-Play `reView Tic Tac Toe` here: https://malpenzibo.github.io/review/
+Play `reView Tic Tac Toe` here: https://malpenzibo.github.io/review/tictactoe
 
 ![Tic Tac Toe](https://raw.githubusercontent.com/MalpenZibo/review/gh-pages/tictactoe/tictactoe.gif)
