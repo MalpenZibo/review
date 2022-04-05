@@ -43,11 +43,13 @@ jobs:
           crate: cargo-release
           version: 0.18.5
 
-      - name: "Generate changelog"
+      - name: Generate changelog
         uses: heinrichreimer/github-changelog-generator-action@v2.3
         id: changelog
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          issues: false
+          unreleased: false
 
       - name: Commit changelog
         run: |
