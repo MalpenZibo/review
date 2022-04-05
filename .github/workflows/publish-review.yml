@@ -56,7 +56,7 @@ jobs:
           git push origin 14-ci_stuff_buildtest_code
 
       - name: Release review-macro
-        run: cargo release ${PUBLISH_LEVEL} --token ${CRATES_TOKEN} --no-confirm --package review-macro
+        run: cargo release ${PUBLISH_LEVEL} --token ${CRATES_TOKEN} --execute --no-confirm --package review-macro
         env:
           PUBLISH_LEVEL: ${{ github.event.inputs.level }}
           CRATES_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
