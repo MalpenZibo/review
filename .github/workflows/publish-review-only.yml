@@ -28,6 +28,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+          target: wasm32-unknown-unknown
           override: true
           profile: minimal
 
@@ -50,17 +51,19 @@ jobs:
           git push origin main
 
       - name: Release review
-        run: cargo release ${PUBLISH_LEVEL} --token ${CRATES_TOKEN} --execute --no-confirm --package review
+        run: cargo release ${PUBLISH_LEVEL} --token ${CRATES_TOKEN} --no-confirm --package review
         env:
           PUBLISH_LEVEL: ${{ github.event.inputs.level }}
           CRATES_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
 
-      - name: Get tag
+      - name: Get New version
         id: gettag
-        uses: WyriHaximus/github-action-get-previous-tag@v1
+        run: |
+          cd review
+          echo "::set-output name=TAG_NAME::$(cargo pkgid | cut -d# -f2 | cut -d: -f2)
 
       - name: Create a Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ steps.gettag.outputs.tag }}
+          tag_name: ${{ steps.gettag.outputs.TAG_NAME }}
           body: ${{ steps.changelog.outputs.stdout }}
