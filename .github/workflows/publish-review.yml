@@ -76,4 +76,4 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.gettag.outputs.TAG_NAME }}
-          body: ${{ steps.changelog.outputs.stdout }}
+          body: ${{ steps.changelog.outputs.changelog }}
