@@ -65,7 +65,7 @@ jobs:
         id: gettag
         run: |
           cd review
-          echo "::set-output name=TAG_NAME::$(cargo pkgid | cut -d# -f2 | cut -d: -f2)
+          echo "::set-output name=TAG_NAME::$(cargo pkgid | cut -d# -f2 | cut -d: -f2)"
 
       - name: Create a Release
         uses: softprops/action-gh-release@v1
