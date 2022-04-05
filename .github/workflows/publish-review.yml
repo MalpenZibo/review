@@ -48,7 +48,6 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           issues: false
-          unreleased: false
 
       - name: Commit changelog
         run: |
