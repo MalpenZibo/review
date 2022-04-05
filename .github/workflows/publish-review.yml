@@ -23,6 +23,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Config Git
+        uses: oleksiyrudenko/gha-git-credentials@v2-latest
+
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
         with:
