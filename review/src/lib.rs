@@ -12,7 +12,7 @@
 //!
 //! ## Example
 //!
-//! ```rust
+//! ```rust,no_run
 //! use review::EventType::OnClick;
 //! use review::Tag::{Button, Div};
 //! use review::{callback, children, component, use_state, ElementBuilder, VNode};
@@ -74,9 +74,13 @@ extern crate review_macro;
 ///
 /// # Example
 /// ```rust
+/// # use review::{component, ElementBuilder};
+/// # use review::Tag::P;
+/// # #[derive(Debug)]
+/// # pub struct Props {};
 /// #[component(Board)]
 /// pub fn board(props: &Props) -> VNode {
-///     P.with_child(format!("{}", props)).into()
+///     P.with_child(format!("{:?}", props)).into()
 /// }
 /// ```
 pub use review_macro::component;
@@ -88,6 +92,7 @@ pub use review_macro::component;
 ///
 /// # Example
 /// ```rust
+/// # use review::{hook, State, use_state, use_effect, log};
 /// #[hook]
 /// pub fn use_example() -> State<u32> {
 ///     let (c, set_c) = use_state(5);
@@ -95,7 +100,7 @@ pub use review_macro::component;
 ///         {
 ///             let c = c.clone();
 ///             move || {
-///                 review::log::info!("{}", c);
+///                 log::info!("{}", c);
 ///
 ///                 None::<fn()>
 ///             }

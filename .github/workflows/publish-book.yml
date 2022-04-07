@@ -1,0 +1,27 @@
+name: Publish review book
+
+permissions:
+  contents: write
+
+on: workflow_dispatch
+jobs:
+  publish:
+    name: Publish book
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Setup mdBook
+        uses: peaceiris/actions-mdbook@v1
+
+      - run: mdbook build ./docs
+
+      - name: Deploy
+        uses: JamesIves/github-pages-deploy-action@v4.2.5
+        with:
+          branch: gh-pages
+          folder: ./docs/book
+          clean-exclude: tictactoe

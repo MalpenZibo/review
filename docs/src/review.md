@@ -1,6 +1,6 @@
 # reView Book
 
-Welcome to the *reView Book*, simple documentation about *reView*.
+Welcome to the *reView Book*, a simple documentation about *reView*.
 
 ## What is reView?
 reView is a library written in [Rust](https://www.rust-lang.org/) for creating front-end web app using [WebAssembly](https://webassembly.org/).
