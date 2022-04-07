@@ -17,6 +17,8 @@ pub struct UseEffectBuilder<E, D: PartialEq> {
 ///
 /// Without cleanup function and without dependencies
 /// ```rust
+/// # use review::{VNode, log, component, use_effect};
+/// # use review::Tag::Div;
 /// #[component(Example)]
 /// pub fn example() -> VNode {
 ///     use_effect(
@@ -33,6 +35,8 @@ pub struct UseEffectBuilder<E, D: PartialEq> {
 ///
 /// With cleanup function and without dependencies
 /// ```rust
+/// # use review::{VNode, component, use_effect};
+/// # use review::Tag::Div;
 /// #[component(Example)]
 /// pub fn example() -> VNode {
 ///     use_effect(
@@ -49,11 +53,13 @@ pub struct UseEffectBuilder<E, D: PartialEq> {
 ///
 /// With cleanup function and dependencies
 /// ```rust
+/// # use review::{component, VNode, log, use_effect};
+/// # use review::Tag::Div;
 /// #[component(Example)]
 /// pub fn example() -> VNode {
 ///     use_effect(
 ///         || {
-///             review::log::info!("hello!");
+///             log::info!("hello!");
 ///             Some(|| log::info!("clean"))
 ///         },
 ///         Some(()) // run only one time because () never change

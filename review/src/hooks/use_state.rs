@@ -21,6 +21,9 @@ pub struct UseStateBuilder<T> {
 ///
 /// # Example
 /// ```rust
+/// # use review::{VNode, use_state, children, callback, component, ElementBuilder};
+/// # use review::Tag::{Div, P, Button};
+/// # use review::EventType::OnClick;
 /// #[component(Example)]
 /// pub fn example() -> VNode {
 ///     let (counter, set_counter) = use_state(0);

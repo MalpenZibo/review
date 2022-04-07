@@ -23,7 +23,8 @@ thread_local! {
 /// Starts a reView app mounted to the element with the specified id.
 ///
 /// # Example
-/// ```rust
+/// ```rust,no_run
+/// # use review::Tag::Div;
 /// review::render(Div.into(), "root");
 /// ```
 pub fn render(element: VNode, container_id: &str) {

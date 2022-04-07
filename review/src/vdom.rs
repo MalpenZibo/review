@@ -152,24 +152,29 @@ impl From<VElement> for VNode {
 /// Then the obtained [VElement] can be converted in a [VNode] calling into()
 /// # Example
 /// ```rust
-/// Main.with_children(children!(
-///  Img.with_attribute("class", "logo")
-///         .with_attribute("src", "/assets/logo.png")
-///         .with_attribute("alt", "reView logo"),
-///      H1.with_child("Hello World!"),
-///      Span.with_attribute("class", "subtitle")
-///          .with_children(children!(
-///              "from reView with ",
-///              I.with_attribute("class", "heart")
-///          ))
-///      ))
-///      .into()
+/// # use review::{VNode, children, ElementBuilder};
+/// # use review::Tag::{Main, Img, H1, Span, I};
+/// let vnode: VNode = Main
+///     .with_children(children!(
+///         Img.with_attribute("class", "logo")
+///             .with_attribute("src", "/assets/logo.png")
+///             .with_attribute("alt", "reView logo"),
+///         H1.with_child("Hello World!"),
+///         Span.with_attribute("class", "subtitle")
+///             .with_children(children!(
+///                 "from reView with ",
+///                 I.with_attribute("class", "heart")
+///             ))
+///     ))
+///     .into();
 ///```
 pub trait ElementBuilder {
     /// This function is used to append a child that implements [Into<VNode>] to a [Tag] or a [VElement] and return a [VElement]
     ///
     /// # Example
     /// ```rust
+    /// # use review::ElementBuilder;
+    /// # use review::Tag::{Div, Span, Button};
     /// let mut velement = Div.with_child(Button);
     /// velement.with_child(Span.with_child("hello!!"));
     /// ```
@@ -179,11 +184,15 @@ pub trait ElementBuilder {
     ///
     /// # Example
     /// ```rust
+    /// # use review::ElementBuilder;
+    /// # use review::Tag::{Div, Button, A};
     /// let velement = Div.with_children(vec!(Button.into(), Div.into(), A.into()));
     /// ```
     /// or to avoid the `.into()` calls
     /// # Example
     /// ```rust
+    /// # use review::{children, ElementBuilder};
+    /// # use review::Tag::{Div, Button, A};
     /// let velement = Div.with_children(children!(Button, Div, A));
     /// ```
     fn with_children(self, children: Vec<VNode>) -> VElement;
@@ -192,6 +201,8 @@ pub trait ElementBuilder {
     ///
     /// # Example
     /// ```rust
+    /// # use review::ElementBuilder;
+    /// # use review::Tag::A;
     /// let mut velement = A.with_attribute("href", "https://malpenzibo.github.io/review/");
     /// velement.with_attribute("target", "_blank");
     /// ```
@@ -201,6 +212,8 @@ pub trait ElementBuilder {
     ///
     /// # Example
     /// ```rust
+    /// # use review::ElementBuilder;
+    /// # use review::Tag::Div;
     /// let velement = Div.with_attributes(vec!(
     ///     ("href", "https://malpenzibo.github.io/review/"),
     ///     ("target", "_blank")
@@ -211,7 +224,10 @@ pub trait ElementBuilder {
     /// This function is used to append an event to a [Tag] or a [VElement] and return a [VElement]
     ///
     /// # Example
-    /// ```rust
+    /// ```rust,no_run
+    /// # use review::{callback, ElementBuilder, log};
+    /// # use review::Tag::Div;
+    /// # use review::EventType::{OnClick, OnMouseEnter};
     /// let mut velement = Div.with_event(OnClick, callback!(move || log::info!("hello!!")));
     /// velement.with_event(OnMouseEnter, callback!(move || log::info!("mouseEnter!!")));
     /// ```
@@ -314,8 +330,11 @@ impl ElementBuilder for Tag {
 /// This macro is used to declare event for a [Tag] element using the [ElementBuilder] API
 ///
 /// # Example
-/// ```rust
-/// Button.with_event(OnClick, callback!(move || log::info!("hello from js on click event")))
+/// ```rust,no_run
+/// # use review::{callback, log, ElementBuilder};
+/// # use review::Tag::Button;
+/// # use review::EventType::OnClick;
+/// Button.with_event(OnClick, callback!(move || log::info!("hello from js on click event")));
 /// ```
 #[macro_export]
 macro_rules! callback {
@@ -356,7 +375,9 @@ macro_rules! callback {
 ///
 /// # Example
 /// ```rust
-/// Div.with_children(children!("test", Div.with_child("test2")))
+/// # use review::{children, ElementBuilder};
+/// # use review::Tag::Div;
+/// Div.with_children(children!("test", Div.with_child("test2")));
 /// ```
 #[macro_export]
 macro_rules! children {
