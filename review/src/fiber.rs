@@ -50,7 +50,7 @@ impl PartialEq for UpdateData {
                 },
             ) if attributes_a == attributes_b && events_a == events_b => true,
             (UpdateData::Component(component_a), UpdateData::Component(component_b))
-                if Rc::ptr_eq(component_a, component_b) =>
+                if component_a == component_b =>
             {
                 true
             }
