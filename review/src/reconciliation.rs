@@ -1,5 +1,4 @@
 use crate::fiber::{EffectTag, FiberId, FiberNode, FiberTree, UpdateData};
-//use crate::hooks::run_effects;
 use crate::node::{Component, Element, Node, Text};
 use crate::VElement;
 use crate::VNode;

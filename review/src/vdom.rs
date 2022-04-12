@@ -390,6 +390,7 @@ macro_rules! children {
 mod tests {
 
     use super::*;
+    use crate::component;
     use crate::Events;
     use crate::Tag::*;
     use crate::VElement;
@@ -428,26 +429,6 @@ mod tests {
             })
         );
     }
-
-    #[derive(Debug, PartialEq)]
-    pub struct Test {
-        cua: u32,
-    }
-
-    // #[component(Component1)]
-    // fn component(props: &Test) -> VNode {
-    //     format!("{}", props.cua).into()
-    // }
-
-    // #[test]
-    // fn create_component() {
-    //     let component: VNode = Component1(Test { cua: 8 }).into();
-
-    //     assert_eq!(
-    //         component,
-    //         VNode::Component(Box::new(Component1(Test { cua: 8 })))
-    //     );
-    // }
 
     #[test]
     fn create_complex_vdom() {

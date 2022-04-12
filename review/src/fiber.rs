@@ -8,7 +8,7 @@ use std::rc::Rc;
 #[doc(hidden)]
 pub type FiberId = usize;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub(crate) struct FiberNode {
     pub node: Node,
     pub child: Option<FiberId>,
@@ -28,11 +28,35 @@ pub(crate) enum UpdateData {
     Component(Rc<dyn AnyComponent>),
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub(crate) enum EffectTag {
     Placement,
     Deletion,
     Update(UpdateData),
+}
+
+impl PartialEq for UpdateData {
+    fn eq(&self, other: &UpdateData) -> bool {
+        match (self, other) {
+            (UpdateData::Text(text_a), UpdateData::Text(text_b)) if text_a == text_b => true,
+            (
+                UpdateData::Element {
+                    attributes: attributes_a,
+                    events: events_a,
+                },
+                UpdateData::Element {
+                    attributes: attributes_b,
+                    events: events_b,
+                },
+            ) if attributes_a == attributes_b && events_a == events_b => true,
+            (UpdateData::Component(component_a), UpdateData::Component(component_b))
+                if Rc::ptr_eq(component_a, component_b) =>
+            {
+                true
+            }
+            _ => false,
+        }
+    }
 }
 
 impl std::cmp::PartialEq<VNode> for FiberNode {
@@ -55,7 +79,7 @@ pub(crate) enum State {
     Removed,
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, PartialEq, Debug)]
 pub(crate) struct FiberTree {
     nodes: Vec<FiberNode>,
     first_free_node: Option<FiberId>,
@@ -152,25 +176,353 @@ impl FiberTree {
             self.first_free_node = Some(id);
         }
 
-        let mut current_id = Some(id);
-        while let Some(some_current_id) = current_id {
-            if let Some(node) = self.get_mut(some_current_id) {
-                node.state = State::Removed;
+        if let Some(node) = self.get_mut(id) {
+            node.state = State::Removed;
+            let mut current_id = node.child;
+            while let Some(some_current_id) = current_id {
+                if let Some(node) = self.get_mut(some_current_id) {
+                    node.state = State::Removed;
 
-                if node.child.is_some() {
-                    current_id = node.child;
-                } else if node.sibling.is_some() {
-                    current_id = node.sibling;
-                } else if let Some(parent) = node.parent {
-                    if parent != id {
-                        current_id = self.get(parent).and_then(|parent_node| parent_node.sibling);
+                    if node.child.is_some() {
+                        current_id = node.child;
+                    } else if node.sibling.is_some() {
+                        current_id = node.sibling;
+                    } else if let Some(parent) = node.parent {
+                        if parent != id {
+                            current_id =
+                                self.get(parent).and_then(|parent_node| parent_node.sibling);
+                        } else {
+                            current_id = None;
+                        }
                     } else {
                         current_id = None;
                     }
-                } else {
-                    current_id = None;
                 }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::FiberTree;
+    use crate::{
+        fiber::{EffectTag, FiberNode, State},
+        node::{Node, Text},
+    };
+
+    fn create_test_node(string: &str) -> Node {
+        Node::Text(Text {
+            dom: None,
+            text: string.to_owned(),
+        })
+    }
+
+    #[test]
+    fn create_node() {
+        let mut fiber_tree = FiberTree::default();
+
+        fiber_tree.new_node(create_test_node("test"));
+
+        assert_eq!(
+            fiber_tree,
+            FiberTree {
+                nodes: vec!(FiberNode {
+                    child: None,
+                    sibling: None,
+                    parent: None,
+                    state: State::Valid,
+                    effect_tag: Some(EffectTag::Placement),
+                    node: Node::Text(Text {
+                        dom: None,
+                        text: "test".to_owned(),
+                    })
+                }),
+                first_free_node: None
+            }
+        )
+    }
+
+    #[test]
+    fn inser_child() {
+        let mut fiber_tree = FiberTree::default();
+
+        let parent_id = fiber_tree.new_node(create_test_node("test"));
+        let child_id = fiber_tree.new_node(create_test_node("test child"));
+
+        fiber_tree.insert_child(child_id, parent_id, None);
+
+        assert_eq!(
+            fiber_tree,
+            FiberTree {
+                nodes: vec!(
+                    FiberNode {
+                        child: Some(child_id),
+                        sibling: None,
+                        parent: None,
+                        state: State::Valid,
+                        effect_tag: Some(EffectTag::Placement),
+                        node: Node::Text(Text {
+                            dom: None,
+                            text: "test".to_owned(),
+                        })
+                    },
+                    FiberNode {
+                        child: None,
+                        sibling: None,
+                        parent: Some(parent_id),
+                        state: State::Valid,
+                        effect_tag: Some(EffectTag::Placement),
+                        node: Node::Text(Text {
+                            dom: None,
+                            text: "test child".to_owned(),
+                        })
+                    }
+                ),
+                first_free_node: None
+            }
+        )
+    }
+
+    #[test]
+    fn inser_child_after_sibling() {
+        let mut fiber_tree = FiberTree::default();
+
+        let parent_id = fiber_tree.new_node(create_test_node("test"));
+        let child_1_id = fiber_tree.new_node(create_test_node("test child 1"));
+        let child_2_id = fiber_tree.new_node(create_test_node("test child 2"));
+
+        fiber_tree.insert_child(child_1_id, parent_id, None);
+        fiber_tree.insert_child(child_2_id, parent_id, Some(child_1_id));
+
+        assert_eq!(
+            fiber_tree,
+            FiberTree {
+                nodes: vec!(
+                    FiberNode {
+                        child: Some(child_1_id),
+                        sibling: None,
+                        parent: None,
+                        state: State::Valid,
+                        effect_tag: Some(EffectTag::Placement),
+                        node: Node::Text(Text {
+                            dom: None,
+                            text: "test".to_owned(),
+                        })
+                    },
+                    FiberNode {
+                        child: None,
+                        sibling: Some(child_2_id),
+                        parent: Some(parent_id),
+                        state: State::Valid,
+                        effect_tag: Some(EffectTag::Placement),
+                        node: Node::Text(Text {
+                            dom: None,
+                            text: "test child 1".to_owned(),
+                        })
+                    },
+                    FiberNode {
+                        child: None,
+                        sibling: None,
+                        parent: Some(parent_id),
+                        state: State::Valid,
+                        effect_tag: Some(EffectTag::Placement),
+                        node: Node::Text(Text {
+                            dom: None,
+                            text: "test child 2".to_owned(),
+                        })
+                    }
+                ),
+                first_free_node: None
+            }
+        )
+    }
+
+    #[test]
+    fn remove_node() {
+        let mut fiber_tree = FiberTree::default();
+
+        let parent_id = fiber_tree.new_node(create_test_node("test"));
+        let child_1_id = fiber_tree.new_node(create_test_node("test child 1"));
+        let child_2_id = fiber_tree.new_node(create_test_node("test child 2"));
+        let child_3_id = fiber_tree.new_node(create_test_node("test child 3"));
+
+        fiber_tree.insert_child(child_1_id, parent_id, None);
+        fiber_tree.insert_child(child_2_id, parent_id, Some(child_1_id));
+        fiber_tree.insert_child(child_3_id, parent_id, Some(child_2_id));
+
+        fiber_tree.remove(child_1_id);
+
+        assert_eq!(
+            fiber_tree,
+            FiberTree {
+                nodes: vec!(
+                    FiberNode {
+                        child: Some(child_2_id),
+                        sibling: None,
+                        parent: None,
+                        state: State::Valid,
+                        effect_tag: Some(EffectTag::Placement),
+                        node: Node::Text(Text {
+                            dom: None,
+                            text: "test".to_owned(),
+                        })
+                    },
+                    FiberNode {
+                        child: None,
+                        sibling: Some(child_2_id),
+                        parent: Some(parent_id),
+                        state: State::Removed,
+                        effect_tag: Some(EffectTag::Placement),
+                        node: Node::Text(Text {
+                            dom: None,
+                            text: "test child 1".to_owned(),
+                        })
+                    },
+                    FiberNode {
+                        child: None,
+                        sibling: Some(child_3_id),
+                        parent: Some(parent_id),
+                        state: State::Valid,
+                        effect_tag: Some(EffectTag::Placement),
+                        node: Node::Text(Text {
+                            dom: None,
+                            text: "test child 2".to_owned(),
+                        })
+                    },
+                    FiberNode {
+                        child: None,
+                        sibling: None,
+                        parent: Some(parent_id),
+                        state: State::Valid,
+                        effect_tag: Some(EffectTag::Placement),
+                        node: Node::Text(Text {
+                            dom: None,
+                            text: "test child 3".to_owned(),
+                        })
+                    }
+                ),
+                first_free_node: Some(child_1_id)
+            }
+        )
+    }
+
+    #[test]
+    fn get_node() {
+        let mut fiber_tree = FiberTree::default();
+
+        let parent_id = fiber_tree.new_node(create_test_node("test"));
+        let child_id = fiber_tree.new_node(create_test_node("test child"));
+
+        fiber_tree.insert_child(child_id, parent_id, None);
+
+        assert_eq!(
+            fiber_tree.get(parent_id),
+            Some(&FiberNode {
+                child: Some(child_id),
+                sibling: None,
+                parent: None,
+                state: State::Valid,
+                effect_tag: Some(EffectTag::Placement),
+                node: Node::Text(Text {
+                    dom: None,
+                    text: "test".to_owned(),
+                })
+            })
+        );
+        assert_eq!(
+            fiber_tree.get(child_id),
+            Some(&FiberNode {
+                child: None,
+                sibling: None,
+                parent: Some(parent_id),
+                state: State::Valid,
+                effect_tag: Some(EffectTag::Placement),
+                node: Node::Text(Text {
+                    dom: None,
+                    text: "test child".to_owned(),
+                })
+            })
+        );
+    }
+
+    #[test]
+    fn get_first_child() {
+        let mut fiber_tree = FiberTree::default();
+
+        let parent_id = fiber_tree.new_node(create_test_node("test"));
+        let child_id = fiber_tree.new_node(create_test_node("test child"));
+
+        fiber_tree.insert_child(child_id, parent_id, None);
+        let node = fiber_tree.get(parent_id);
+
+        assert_eq!(
+            fiber_tree.get(node.unwrap().child.unwrap()),
+            Some(&FiberNode {
+                child: None,
+                sibling: None,
+                parent: Some(parent_id),
+                state: State::Valid,
+                effect_tag: Some(EffectTag::Placement),
+                node: Node::Text(Text {
+                    dom: None,
+                    text: "test child".to_owned(),
+                })
+            })
+        );
+    }
+
+    #[test]
+    fn get_sibling() {
+        let mut fiber_tree = FiberTree::default();
+
+        let parent_id = fiber_tree.new_node(create_test_node("test"));
+        let child_id = fiber_tree.new_node(create_test_node("test child"));
+        let sibling_id = fiber_tree.new_node(create_test_node("test sibling"));
+
+        fiber_tree.insert_child(sibling_id, parent_id, None);
+        fiber_tree.insert_child(child_id, parent_id, None);
+        let node = fiber_tree.get(child_id);
+
+        assert_eq!(
+            fiber_tree.get(node.unwrap().sibling.unwrap()),
+            Some(&FiberNode {
+                child: None,
+                sibling: None,
+                parent: Some(parent_id),
+                state: State::Valid,
+                effect_tag: Some(EffectTag::Placement),
+                node: Node::Text(Text {
+                    dom: None,
+                    text: "test sibling".to_owned(),
+                })
+            })
+        );
+    }
+
+    #[test]
+    fn get_parent() {
+        let mut fiber_tree = FiberTree::default();
+
+        let parent_id = fiber_tree.new_node(create_test_node("test"));
+        let child_id = fiber_tree.new_node(create_test_node("test child"));
+
+        fiber_tree.insert_child(child_id, parent_id, None);
+        let node = fiber_tree.get(child_id);
+
+        assert_eq!(
+            fiber_tree.get(node.unwrap().parent.unwrap()),
+            Some(&FiberNode {
+                child: Some(child_id),
+                sibling: None,
+                parent: None,
+                state: State::Valid,
+                effect_tag: Some(EffectTag::Placement),
+                node: Node::Text(Text {
+                    dom: None,
+                    text: "test".to_owned(),
+                })
+            })
+        );
     }
 }
