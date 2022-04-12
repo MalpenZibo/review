@@ -390,7 +390,6 @@ macro_rules! children {
 mod tests {
 
     use super::*;
-    use crate::component;
     use crate::Events;
     use crate::Tag::*;
     use crate::VElement;
