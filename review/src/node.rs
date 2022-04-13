@@ -104,7 +104,7 @@ pub(crate) struct Component {
 
 impl PartialEq for Component {
     fn eq(&self, other: &Component) -> bool {
-        &self.function == &other.function
+        *self.function == *other.function
     }
 }
 
