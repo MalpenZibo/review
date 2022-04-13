@@ -2,7 +2,7 @@ use crate::{AnyComponent, Events, HookContext, Tag, VNode};
 use std::{collections::HashMap, rc::Rc};
 use wasm_bindgen::JsCast;
 
-#[derive(Debug)]
+#[derive(PartialEq, Debug)]
 pub(crate) struct Element {
     pub dom: Option<web_sys::Element>,
     pub tag: Tag,
@@ -81,7 +81,7 @@ impl Element {
     }
 }
 
-#[derive(Debug)]
+#[derive(PartialEq, Debug)]
 pub(crate) struct Text {
     pub dom: Option<web_sys::Text>,
     pub text: String,
@@ -102,7 +102,13 @@ pub(crate) struct Component {
     pub function: Rc<dyn AnyComponent>,
 }
 
-#[derive(Debug)]
+impl PartialEq for Component {
+    fn eq(&self, other: &Component) -> bool {
+        *self.function == *other.function
+    }
+}
+
+#[derive(Debug, PartialEq)]
 pub(crate) enum Node {
     Element(Element),
     Text(Text),

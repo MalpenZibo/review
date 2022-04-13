@@ -129,3 +129,133 @@ impl<E: Fn() -> Option<C> + 'static, C: Fn() + 'static, D: Any + PartialEq> Hook
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::{cell::RefCell, rc::Rc};
+
+    use super::*;
+
+    #[test]
+    fn effect_call() {
+        let mut context = HookContext::default();
+
+        let counter = Rc::new(RefCell::new(0));
+
+        let hook_context = &mut (0, &mut context);
+
+        use_effect(
+            {
+                let counter = counter.clone();
+                move || {
+                    let mut c_mut = counter.borrow_mut();
+                    *c_mut += 1;
+
+                    None::<fn()>
+                }
+            },
+            None::<()>,
+        )
+        .build(hook_context);
+
+        for h in context.hooks.iter_mut() {
+            h.post_render();
+        }
+        assert_eq!(*counter.borrow(), 1);
+    }
+
+    #[test]
+    fn effect_call_with_dependency() {
+        let mut context = HookContext::default();
+
+        let mut dep = 0;
+
+        let counter = Rc::new(RefCell::new(0));
+
+        let effect = |hook_context: &mut (usize, &mut HookContext), dep: u32| {
+            use_effect(
+                {
+                    let counter = counter.clone();
+                    move || {
+                        let mut c_mut = counter.borrow_mut();
+                        *c_mut += 1;
+
+                        None::<fn()>
+                    }
+                },
+                Some(dep),
+            )
+            .build(hook_context);
+        };
+
+        {
+            let hook_context = &mut (0, &mut context);
+            (effect)(hook_context, dep);
+
+            for h in context.hooks.iter_mut() {
+                h.post_render();
+            }
+            assert_eq!(*counter.borrow(), 1);
+        }
+
+        context.counter = 0;
+
+        {
+            let hook_context = &mut (0, &mut context);
+            (effect)(hook_context, dep);
+
+            for h in context.hooks.iter_mut() {
+                h.post_render();
+            }
+            assert_eq!(*counter.borrow(), 1);
+        }
+
+        dep += 1;
+        context.counter = 0;
+
+        {
+            let hook_context = &mut (0, &mut context);
+            (effect)(hook_context, dep);
+
+            for h in context.hooks.iter_mut() {
+                h.post_render();
+            }
+            assert_eq!(*counter.borrow(), 2);
+        }
+    }
+
+    #[test]
+    fn effect_call_with_cleanup() {
+        let mut context = HookContext::default();
+
+        let counter = Rc::new(RefCell::new(0));
+        let clean = Rc::new(RefCell::new(1));
+
+        let hook_context = &mut (0, &mut context);
+
+        use_effect(
+            {
+                let counter = counter.clone();
+                let clean = clean.clone();
+                move || {
+                    let mut c_mut = counter.borrow_mut();
+                    *c_mut += 1;
+
+                    let clean = clean.clone();
+                    Some(move || {
+                        let mut c_mut = clean.borrow_mut();
+                        *c_mut = 0;
+                    })
+                }
+            },
+            None::<()>,
+        )
+        .build(hook_context);
+
+        for h in context.hooks.iter_mut() {
+            h.post_render();
+        }
+        assert_eq!(*counter.borrow(), 1);
+        assert_eq!(*clean.borrow(), 0);
+    }
+}

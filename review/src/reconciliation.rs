@@ -1,5 +1,4 @@
 use crate::fiber::{EffectTag, FiberId, FiberNode, FiberTree, UpdateData};
-//use crate::hooks::run_effects;
 use crate::node::{Component, Element, Node, Text};
 use crate::VElement;
 use crate::VNode;
@@ -624,65 +623,4 @@ mod tests {
 
         compare_vdom_with_dom(vdom(), &mut app, root);
     }
-
-    #[derive(PartialEq, Debug)]
-    pub struct TestProp {
-        index: usize,
-    }
-
-    // #[component(TestComponent)]
-    // fn test_component(props: &TestProp) -> VNode {
-    //     &format!("test {}", props.index).into()
-    // }
-
-    // #[component(TestComponent2)]
-    // fn test_component2(props: &TestProp) -> VNode {
-    //     Div.with_child(&format!("test {}", props.index)).into()
-    // }
-
-    // #[test]
-    // fn component_test() {
-    //     let vdom: VNode = || Div.with_child(TestComponent(TestProp { index: 5 })).into();
-    //     let mut app = create_app(vdom());
-
-    //     work_on_dom(&mut app);
-    //     commit(&mut app);
-
-    //     print_tree(&app);
-
-    //     compare_vdom_with_dom(vdom(), &app);
-
-    //     let vdom = || Div.with_child(Div).with_child(Div).into();
-    //     manually_generate_working_context(&mut app, vdom());
-
-    //     work_on_dom(&mut app);
-    //     commit(&mut app);
-
-    //     print_tree(&app);
-
-    //     compare_vdom_with_dom(vdom(), &app);
-    // }
-
-    // #[test]
-    // fn component_test_changes() {
-    //     let vdom = || Div.with_child(TestComponent(TestProp { index: 5 })).into();
-    //     let mut app = create_app(vdom());
-
-    //     work_on_dom(&mut app);
-    //     commit(&mut app);
-
-    //     print_tree(&app);
-
-    //     compare_vdom_with_dom(vdom(), &app);
-
-    //     let vdom = || Div.with_child(TestComponent2(TestProp { index: 3 })).into();
-    //     manually_generate_working_context(&mut app, vdom());
-
-    //     work_on_dom(&mut app);
-    //     commit(&mut app);
-
-    //     print_tree(&app);
-
-    //     compare_vdom_with_dom(vdom(), &app);
-    // }
 }
