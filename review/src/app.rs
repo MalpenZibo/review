@@ -1,7 +1,7 @@
 use crate::fiber::{FiberId, FiberTree};
 use crate::node::{Element, Node};
 use crate::reconciliation::{commit, perform_unit_of_work};
-use crate::request_idle_callback;
+use crate::request_animation_frame;
 use crate::{Events, Tag, VNode};
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -51,26 +51,27 @@ pub fn render(element: VNode, container_id: &str) {
             document: Some(web_sys::window().unwrap().document().unwrap()),
         }));
 
+        let run_for = instant::Duration::from_millis(5);
+
         let f = Rc::new(RefCell::new(None));
         let g = f.clone();
 
-        *g.borrow_mut() = Some(Closure::wrap(
-            Box::new(move |deadline: web_sys::IdleDeadline| {
-                APP.with(|app| {
-                    if let Ok(mut app) = app.try_borrow_mut() {
-                        if let Some(app) = &mut *app {
-                            let check_deadline = || deadline.time_remaining() > 1.0;
-                            work_loop(app, check_deadline);
+        *g.borrow_mut() = Some(Closure::wrap(Box::new(move || {
+            APP.with(|app| {
+                if let Ok(mut app) = app.try_borrow_mut() {
+                    if let Some(app) = &mut *app {
+                        let deadline = instant::Instant::now();
+                        let check_deadline = || deadline.elapsed() < run_for;
+                        work_loop(app, check_deadline);
 
-                            commit_work(app, check_deadline);
-                        }
+                        commit_work(app, check_deadline);
                     }
-                    request_idle_callback(f.borrow().as_ref().unwrap());
-                });
-            }) as Box<dyn FnMut(web_sys::IdleDeadline)>,
-        ));
+                }
+                request_animation_frame(f.borrow().as_ref().unwrap());
+            });
+        }) as Box<dyn FnMut()>));
 
-        request_idle_callback(g.borrow().as_ref().unwrap());
+        request_animation_frame(g.borrow().as_ref().unwrap());
     });
 }
 
