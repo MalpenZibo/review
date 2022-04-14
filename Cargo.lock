@@ -139,7 +139,7 @@ dependencies = [
 
 [[package]]
 name = "review"
-version = "0.2.1"
+version = "0.3.0"
 dependencies = [
  "console_log",
  "downcast-rs",
@@ -156,7 +156,7 @@ dependencies = [
 
 [[package]]
 name = "review-macro"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "proc-macro-error",
  "proc-macro2",

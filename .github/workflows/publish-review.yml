@@ -62,7 +62,7 @@ jobs:
           CRATES_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
 
       - name: Release review
-        run: cargo release ${PUBLISH_LEVEL} --token ${CRATES_TOKEN} --no-confirm --package review
+        run: cargo release ${PUBLISH_LEVEL} --token ${CRATES_TOKEN} --execute --no-confirm --package review
         env:
           PUBLISH_LEVEL: ${{ github.event.inputs.level }}
           CRATES_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}

@@ -1,6 +1,6 @@
 [package]
 name = "review"
-version = "0.2.1"
+version = "0.3.0"
 description = "A React-inspired framework for making client-side single-page apps"
 authors = [
   "Simone Camito"
@@ -19,7 +19,7 @@ license = "MIT"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-review-macro = { path = "../review-macro", version = "0.2.0" }
+review-macro = { path = "../review-macro", version = "0.3.0" }
 
 wasm-bindgen = "0.2.78"
 

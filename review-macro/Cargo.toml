@@ -1,6 +1,6 @@
 [package]
 name = "review-macro"
-version = "0.2.0"
+version = "0.3.0"
 description = "A React-inspired framework for making client-side single-page apps"
 authors = [
   "Simone Camito"
