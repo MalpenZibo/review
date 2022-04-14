@@ -54,7 +54,7 @@ jobs:
         run: |
           git add CHANGELOG.md
           git commit -m "update CHANGELOG.md for review only release"
-          git push origin 14-ci_stuff_buildtest_code
+          git push origin main
 
       - name: Release review
         run: cargo release ${PUBLISH_LEVEL} --token ${CRATES_TOKEN} --execute --no-confirm --package review
