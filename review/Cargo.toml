@@ -2,11 +2,17 @@
 name = "review"
 version = "0.2.1"
 description = "A React-inspired framework for making client-side single-page apps"
+authors = [
+  "Simone Camito"
+]
 repository = "https://github.com/MalpenZibo/review"
-keywords = ["web", "webasm"]
+documentation = "https://docs.rs/review"
+homepage = "https://malpenzibo.github.io/review"
+keywords = ["web", "wasm", "webassembly", "review", "gui"]
 categories = ["gui", "wasm", "web-programming"]
 readme = "../README.md"
 edition = "2021"
+rust-version = "1.56.0"
 license = "MIT"
 
 [lib]
