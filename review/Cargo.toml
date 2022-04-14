@@ -25,6 +25,8 @@ log = "0.4"
 console_log = { version = "0.2", features = ["color"] }
 log-panics = { version = "2.0.0" }
 
+instant = { version = "0.1", features = [ "wasm-bindgen", "inaccurate" ] }
+
 # The `web-sys` crate allows you to interact with the various browser APIs,
 # like the DOM.
 [dependencies.web-sys]

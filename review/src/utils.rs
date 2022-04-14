@@ -9,9 +9,9 @@ pub fn init_logger(level: log::Level) {
     }
 }
 
-pub(crate) fn request_idle_callback(f: &Closure<dyn FnMut(web_sys::IdleDeadline)>) {
+pub(crate) fn request_animation_frame(f: &Closure<dyn FnMut()>) {
     web_sys::window()
         .expect("window access error")
-        .request_idle_callback(f.as_ref().unchecked_ref())
-        .expect("should register `requestIdleCallback` OK");
+        .request_animation_frame(f.as_ref().unchecked_ref())
+        .expect("should register `requestAnimationFrame` OK");
 }
