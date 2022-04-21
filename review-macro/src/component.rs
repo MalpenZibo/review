@@ -5,6 +5,8 @@ use syn::parse::{Parse, ParseStream};
 use syn::spanned::Spanned;
 use syn::{visit_mut, Block, FnArg, Ident, Item, ItemFn, ReturnType, Type, Visibility};
 
+extern crate self as review;
+
 pub(crate) struct Component {
     block: Box<Block>,
     props_type: Box<Type>,
@@ -170,7 +172,7 @@ pub(crate) fn component_impl(
         ));
     }
 
-    let ret_type = quote_spanned!(return_type.span()=> ::review::VNode);
+    let ret_type = quote_spanned!(return_type.span()=> review::VNode);
     let debug_name = format!("{:?}", component_name);
 
     let ctx_ident = Ident::new("context", Span::mixed_site());
@@ -190,10 +192,10 @@ pub(crate) fn component_impl(
             }
         }
 
-        impl ::review::ComponentProvider for #component_name {
+        impl review::ComponentProvider for #component_name {
             type Props = #props_type;
 
-            fn render(#ctx_ident: &mut (::review::FiberId, &mut ::review::HookContext), #arg) -> #ret_type {
+            fn render(#ctx_ident: &mut (review::FiberId, &mut review::HookContext), #arg) -> #ret_type {
                 #block
             }
 
