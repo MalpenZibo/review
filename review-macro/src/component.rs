@@ -3,7 +3,7 @@ use proc_macro2::{Span, TokenStream};
 use quote::{quote, quote_spanned, ToTokens};
 use syn::parse::{Parse, ParseStream};
 use syn::spanned::Spanned;
-use syn::{visit_mut, Block, FnArg, Ident, Item, ItemFn, ReturnType, Type, Visibility};
+use syn::{visit_mut, Block, FnArg, Generics, Ident, Item, ItemFn, ReturnType, Type, Visibility};
 
 extern crate self as review;
 
@@ -13,6 +13,7 @@ pub(crate) struct Component {
     arg: FnArg,
     vis: Visibility,
     name: Ident,
+    generics: Generics,
     return_type: Box<Type>,
 }
 
@@ -25,13 +26,6 @@ impl Parse for Component {
                 let ItemFn {
                     vis, sig, block, ..
                 } = func;
-
-                if !sig.generics.params.is_empty() {
-                    return Err(syn::Error::new_spanned(
-                        sig.generics,
-                        "function components can't contain generics",
-                    ));
-                }
 
                 if sig.asyncness.is_some() {
                     return Err(syn::Error::new_spanned(
@@ -122,6 +116,7 @@ impl Parse for Component {
                     arg,
                     vis,
                     name: sig.ident,
+                    generics: sig.generics,
                     return_type,
                 })
             }
@@ -161,6 +156,7 @@ pub(crate) fn component_impl(
         arg,
         vis,
         name: function_name,
+        generics,
         return_type,
         ..
     } = component;
@@ -180,19 +176,21 @@ pub(crate) fn component_impl(
     let mut body_rewriter = BodyRewriter::default();
     visit_mut::visit_block_mut(&mut body_rewriter, &mut *block);
 
+    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+
     let quoted = quote! {
         #[doc(hidden)]
         #[allow(non_camel_case_types)]
-        #vis struct #component_name(pub #props_type);
+        #vis struct #component_name #generics(pub #props_type) #where_clause;
 
-        impl ::std::fmt::Debug for #component_name {
+        impl #impl_generics ::std::fmt::Debug for #component_name #ty_generics #where_clause {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 f.debug_struct(&#debug_name)
-                 .finish()
+                    .finish()
             }
         }
 
-        impl review::ComponentProvider for #component_name {
+        impl #impl_generics review::ComponentProvider for #component_name #ty_generics #where_clause {
             type Props = #props_type;
 
             fn render(#ctx_ident: &mut (review::FiberId, &mut review::HookContext), #arg) -> #ret_type {
