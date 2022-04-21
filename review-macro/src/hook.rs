@@ -6,6 +6,8 @@ use syn::parse::{Parse, ParseStream};
 use syn::visit_mut;
 use syn::{Ident, ItemFn, Signature};
 
+extern crate self as review;
+
 #[derive(Clone)]
 pub struct HookFn {
     inner: ItemFn,
@@ -74,7 +76,7 @@ pub fn hook_impl(component: HookFn) -> syn::Result<TokenStream> {
     };
 
     let output = quote! {
-        #vis #fn_token #ident #generics ( #prev_inputs #ctx_ident: &mut (::review::FiberId, &mut ::review::HookContext)) #hook_return_type #where_clause #block
+        #vis #fn_token #ident #generics ( #prev_inputs #ctx_ident: &mut (review::FiberId, &mut review::HookContext)) #hook_return_type #where_clause #block
     };
 
     Ok(output)
