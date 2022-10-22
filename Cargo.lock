@@ -139,7 +139,7 @@ dependencies = [
 
 [[package]]
 name = "review"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "console_log",
  "downcast-rs",
